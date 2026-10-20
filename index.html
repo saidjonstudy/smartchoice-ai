@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SmartChoice AI — сравнение стоимости владения</title>
+  <meta name="description" content="Сравните два товара по общей стоимости владения: цена покупки, электроэнергия и обслуживание за выбранный срок.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="masthead-top">
+      <p class="brand">SmartChoice AI</p>
+      <div class="lang-switch" role="group" aria-label="Язык" data-i18n-aria="langNav">
+        <button type="button" data-lang="ru" lang="ru" aria-pressed="true">Рус</button>
+        <button type="button" data-lang="uz" lang="uz" aria-pressed="false">Oʻzb</button>
+        <button type="button" data-lang="en" lang="en" aria-pressed="false">Eng</button>
+      </div>
+    </div>
+    <h1 data-i18n="h1">Дешевле в магазине — не значит дешевле за пять лет</h1>
+    <p class="lede" data-i18n="lede">Введите цену, энергопотребление и обслуживание двух товаров. Калькулятор покажет ориентировочную общую стоимость владения за выбранный срок и объяснит, откуда берётся разница.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <form id="compare-form" novalidate>
+
+    <section class="conditions" aria-labelledby="cond-title">
+      <h2 id="cond-title" data-i18n="condTitle">Общие условия</h2>
+      <p class="section-hint" data-i18n="condHint">Одинаковы для обоих товаров.</p>
+
+      <div class="conditions-grid">
+        <div class="field">
+          <label for="tariff" data-i18n="tariffLabel">Цена 1 кВт·ч электроэнергии</label>
+          <div class="input-unit">
+            <input id="tariff" name="tariff" type="text" inputmode="decimal" autocomplete="off" aria-describedby="tariff-help tariff-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="tariff-help" data-i18n="tariffHelp">Указана в квитанции за свет.</p>
+          <p class="error" id="tariff-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="years" data-i18n="yearsLabel">Срок сравнения</label>
+          <div class="input-unit">
+            <input id="years" name="years" type="text" inputmode="numeric" autocomplete="off" aria-describedby="years-help years-err">
+            <span class="unit" data-i18n="unitYears">лет</span>
+          </div>
+          <p class="help" id="years-help" data-i18n="yearsHelp">Сколько лет вы планируете пользоваться товаром, от 1 до 30.</p>
+          <p class="error" id="years-err" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="products">
+
+      <fieldset class="product product-a">
+        <legend data-i18n="productA">Товар A</legend>
+
+        <div class="field">
+          <label for="a-name"><span data-i18n="nameLabel">Название</span> <span class="optional" data-i18n="optional">(необязательно)</span></label>
+          <div class="input-unit">
+            <input id="a-name" name="a-name" type="text" maxlength="40" autocomplete="off" data-i18n-ph="namePhA">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="a-price" data-i18n="priceLabel">Цена покупки</label>
+          <div class="input-unit">
+            <input id="a-price" name="a-price" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-price-help a-price-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="a-price-help" data-i18n="priceHelp">Цена в магазине.</p>
+          <p class="error" id="a-price-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="a-energy" data-i18n="energyLabel">Энергопотребление в год</label>
+          <div class="input-unit">
+            <input id="a-energy" name="a-energy" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-energy-help a-energy-err">
+            <span class="unit" data-i18n="unitKwh">кВт·ч</span>
+          </div>
+          <p class="help" id="a-energy-help" data-i18n="energyHelp">Указано на энергетической этикетке. Если товар не работает от электричества, введите 0.</p>
+          <p class="error" id="a-energy-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="a-maintenance" data-i18n="maintLabel">Обслуживание в год</label>
+          <div class="input-unit">
+            <input id="a-maintenance" name="a-maintenance" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-maintenance-help a-maintenance-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="a-maintenance-help" data-i18n="maintHelp">Фильтры, чистка, сервис — примерно. Если расходов нет, введите 0.</p>
+          <p class="error" id="a-maintenance-err" hidden></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="product product-b">
+        <legend data-i18n="productB">Товар B</legend>
+
+        <div class="field">
+          <label for="b-name"><span data-i18n="nameLabel">Название</span> <span class="optional" data-i18n="optional">(необязательно)</span></label>
+          <div class="input-unit">
+            <input id="b-name" name="b-name" type="text" maxlength="40" autocomplete="off" data-i18n-ph="namePhB">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="b-price" data-i18n="priceLabel">Цена покупки</label>
+          <div class="input-unit">
+            <input id="b-price" name="b-price" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-price-help b-price-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="b-price-help" data-i18n="priceHelp">Цена в магазине.</p>
+          <p class="error" id="b-price-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="b-energy" data-i18n="energyLabel">Энергопотребление в год</label>
+          <div class="input-unit">
+            <input id="b-energy" name="b-energy" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-energy-help b-energy-err">
+            <span class="unit" data-i18n="unitKwh">кВт·ч</span>
+          </div>
+          <p class="help" id="b-energy-help" data-i18n="energyHelp">Указано на энергетической этикетке. Если товар не работает от электричества, введите 0.</p>
+          <p class="error" id="b-energy-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="b-maintenance" data-i18n="maintLabel">Обслуживание в год</label>
+          <div class="input-unit">
+            <input id="b-maintenance" name="b-maintenance" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-maintenance-help b-maintenance-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="b-maintenance-help" data-i18n="maintHelp">Фильтры, чистка, сервис — примерно. Если расходов нет, введите 0.</p>
+          <p class="error" id="b-maintenance-err" hidden></p>
+        </div>
+      </fieldset>
+
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" data-i18n="btnCalc">Рассчитать</button>
+      <button type="button" id="fill-example" class="btn-secondary" data-i18n="btnExample">Заполнить примером</button>
+      <button type="button" id="clear-btn" class="btn-link" data-i18n="btnReset">Очистить</button>
+    </div>
+    <p class="example-note" data-i18n="exampleNote">Пример учебный: это не данные реальных моделей.</p>
+    <p id="form-error" class="form-error" role="alert" hidden></p>
+  </form>
+
+  <section id="results" class="results" aria-labelledby="verdict" hidden>
+    <p id="stale-note" class="stale-note" data-i18n="staleNote" hidden>Данные изменились, но не все поля заполнены верно. Ниже показан прошлый результат.</p>
+
+    <h2 id="verdict" class="verdict" tabindex="-1"></h2>
+
+    <div class="totals">
+      <div class="total total-a">
+        <p class="total-name" id="r-a-name"></p>
+        <p class="total-sum" id="r-a-total"></p>
+        <dl class="breakdown">
+          <div><dt data-i18n="bdPurchase">Покупка</dt><dd id="r-a-purchase"></dd></div>
+          <div><dt data-i18n="bdEnergy">Электроэнергия</dt><dd id="r-a-energy"></dd></div>
+          <div><dt data-i18n="bdMaint">Обслуживание</dt><dd id="r-a-maint"></dd></div>
+          <div class="breakdown-annual"><dt data-i18n="bdAnnual">Расходы в год</dt><dd id="r-a-annual"></dd></div>
+        </dl>
+      </div>
+      <div class="total total-b">
+        <p class="total-name" id="r-b-name"></p>
+        <p class="total-sum" id="r-b-total"></p>
+        <dl class="breakdown">
+          <div><dt data-i18n="bdPurchase">Покупка</dt><dd id="r-b-purchase"></dd></div>
+          <div><dt data-i18n="bdEnergy">Электроэнергия</dt><dd id="r-b-energy"></dd></div>
+          <div><dt data-i18n="bdMaint">Обслуживание</dt><dd id="r-b-maint"></dd></div>
+          <div class="breakdown-annual"><dt data-i18n="bdAnnual">Расходы в год</dt><dd id="r-b-annual"></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <h3 data-i18n="stackTitle">Из чего складывается сумма</h3>
+    <div id="stack" class="stack"></div>
+    <ul class="legend" aria-hidden="true">
+      <li><span class="swatch seg-purchase"></span><span data-i18n="bdPurchase">Покупка</span></li>
+      <li><span class="swatch seg-energy"></span><span data-i18n="bdEnergy">Электроэнергия</span></li>
+      <li><span class="swatch seg-maint"></span><span data-i18n="bdMaint">Обслуживание</span></li>
+    </ul>
+
+    <h3 data-i18n="chartTitle">Накопленные расходы по годам</h3>
+    <p class="chart-intro" data-i18n="chartIntro">Линии показывают, сколько всего вы потратите к концу каждого года. Если линии пересекаются, в этой точке товары сравниваются по стоимости.</p>
+    <ul class="legend legend-lines">
+      <li><svg width="32" height="10" aria-hidden="true"><line x1="0" y1="5" x2="32" y2="5" class="line-a"/></svg><span id="legend-a"></span></li>
+      <li><svg width="32" height="10" aria-hidden="true"><line x1="0" y1="5" x2="32" y2="5" class="line-b"/></svg><span id="legend-b"></span></li>
+    </ul>
+    <div id="chart" class="chart"></div>
+
+    <details class="year-details">
+      <summary data-i18n="tableToggle">Показать таблицу по годам</summary>
+      <div class="table-scroll">
+        <table class="year-table">
+          <thead>
+            <tr><th scope="col" data-i18n="thYear">Год</th><th scope="col" id="th-a"></th><th scope="col" id="th-b"></th><th scope="col" data-i18n="thDiff">Разница (A − B)</th></tr>
+          </thead>
+          <tbody id="year-body"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <h3 data-i18n="explainTitle">Почему так получилось</h3>
+    <ul id="explain" class="explain"></ul>
+
+    <p class="disclaimer" data-i18n="disclaimer">Это оценка по введённым вами данным, а не гарантия экономии.</p>
+    <button type="button" id="edit-data" class="btn-secondary" data-i18n="btnEdit">Изменить данные</button>
+  </section>
+
+  <section id="analyst" class="analyst" aria-labelledby="analyst-title" hidden>
+    <div class="analyst-head">
+      <h2 id="analyst-title" data-i18n="an_title">Режим аналитика</h2>
+      <span class="badge" data-i18n="an_badge">NPV и чувствительность</span>
+    </div>
+    <p class="analyst-intro" data-i18n="an_intro"></p>
+
+    <div class="sliders">
+      <div class="slider-field">
+        <div class="slider-top">
+          <label for="growth" data-i18n="an_growth">Рост тарифа в год</label>
+          <output id="growth-out" for="growth"></output>
+        </div>
+        <input id="growth" type="range" min="0" max="30" step="0.5" value="0" aria-describedby="growth-help">
+        <p class="help" id="growth-help" data-i18n="an_growthHelp"></p>
+      </div>
+      <div class="slider-field">
+        <div class="slider-top">
+          <label for="discount" data-i18n="an_discount">Ставка дисконтирования</label>
+          <output id="discount-out" for="discount"></output>
+        </div>
+        <input id="discount" type="range" min="0" max="30" step="0.5" value="0" aria-describedby="discount-help">
+        <p class="help" id="discount-help" data-i18n="an_discountHelp"></p>
+      </div>
+    </div>
+
+    <h3 data-i18n="an_buyTitle">Покупка и срок службы</h3>
+    <p class="section-hint an-hint" data-i18n="an_buyHint"></p>
+    <div class="an-prods">
+      <fieldset class="an-prod an-prod-a">
+        <legend id="an-a-legend"></legend>
+        <div class="an-row">
+          <label for="a-term" data-i18n="an_payMethod">Способ покупки</label>
+          <select id="a-term" class="an-select"></select>
+        </div>
+        <div class="an-row" id="a-rate-row" hidden>
+          <div class="slider-top">
+            <label for="a-rate" data-i18n="an_rate">Процент рассрочки в год</label>
+            <output id="a-rate-out" for="a-rate"></output>
+          </div>
+          <input id="a-rate" type="range" min="0" max="60" step="1" value="0" aria-describedby="a-rate-help a-credit-info">
+          <p class="help" id="a-rate-help" data-i18n="an_rateHelp"></p>
+          <p class="credit-info" id="a-credit-info"></p>
+        </div>
+        <div class="an-row">
+          <label for="a-life" data-i18n="an_life">Срок службы</label>
+          <select id="a-life" class="an-select"></select>
+        </div>
+      </fieldset>
+      <fieldset class="an-prod an-prod-b">
+        <legend id="an-b-legend"></legend>
+        <div class="an-row">
+          <label for="b-term" data-i18n="an_payMethod">Способ покупки</label>
+          <select id="b-term" class="an-select"></select>
+        </div>
+        <div class="an-row" id="b-rate-row" hidden>
+          <div class="slider-top">
+            <label for="b-rate" data-i18n="an_rate">Процент рассрочки в год</label>
+            <output id="b-rate-out" for="b-rate"></output>
+          </div>
+          <input id="b-rate" type="range" min="0" max="60" step="1" value="0" aria-describedby="b-rate-help b-credit-info">
+          <p class="help" id="b-rate-help" data-i18n="an_rateHelp"></p>
+          <p class="credit-info" id="b-credit-info"></p>
+        </div>
+        <div class="an-row">
+          <label for="b-life" data-i18n="an_life">Срок службы</label>
+          <select id="b-life" class="an-select"></select>
+        </div>
+      </fieldset>
+    </div>
+
+    <p id="an-verdict" class="an-verdict" aria-live="polite"></p>
+
+    <div class="facts">
+      <div class="fact">
+        <p class="fact-label" data-i18n="an_threshold">Порог тарифа</p>
+        <p class="fact-value" id="an-thr-value"></p>
+        <p class="fact-desc" id="an-thr-desc"></p>
+      </div>
+      <div class="fact">
+        <p class="fact-label" data-i18n="an_payback">Окупаемость с учётом дисконтирования</p>
+        <p class="fact-value" id="an-pb-value"></p>
+        <p class="fact-desc" id="an-pb-desc"></p>
+      </div>
+    </div>
+
+    <h3 data-i18n="an_scenarios">Как меняется вывод</h3>
+    <div class="table-scroll">
+      <table class="year-table scen-table">
+        <thead>
+          <tr><th scope="col" data-i18n="an_thScenario">Сценарий</th><th scope="col" id="an-th-a"></th><th scope="col" id="an-th-b"></th><th scope="col" data-i18n="an_thBetter">Выгоднее</th></tr>
+        </thead>
+        <tbody id="an-scen-body"></tbody>
+      </table>
+    </div>
+
+    <h3 data-i18n="an_eacTitle">Разный срок службы: годовая эквивалентная стоимость (EAC)</h3>
+    <p class="chart-intro" data-i18n="an_eacIntro"></p>
+    <p id="eac-hint" class="eac-hint" data-i18n="an_eacHint"></p>
+    <div id="eac-result" hidden>
+      <div class="facts">
+        <div class="fact fact-a">
+          <p class="fact-label" id="eac-a-name"></p>
+          <p class="fact-value" id="eac-a-value"></p>
+          <p class="fact-desc" id="eac-a-desc"></p>
+        </div>
+        <div class="fact fact-b">
+          <p class="fact-label" id="eac-b-name"></p>
+          <p class="fact-value" id="eac-b-value"></p>
+          <p class="fact-desc" id="eac-b-desc"></p>
+        </div>
+      </div>
+      <p id="eac-verdict" class="an-verdict" aria-live="polite"></p>
+    </div>
+
+    <h3 data-i18n="an_sensTitle">Чувствительность к тарифу</h3>
+    <p class="chart-intro" data-i18n="an_sensIntro"></p>
+    <div id="sens-chart" class="chart"></div>
+
+    <details class="year-details">
+      <summary data-i18n="an_formulaToggle">Формула и допущения</summary>
+      <p class="formula formula-npv">NPV = P + Σ<sub>k=1…Y</sub> (E × R × (1 + g)<sup>k−1</sup> + M) / (1 + d)<sup>k</sup></p>
+      <p class="formula formula-npv">PMT = P × i / (1 − (1 + i)<sup>−n</sup>), i = r / 12</p>
+      <p class="formula formula-npv">EAC = NPV<sub>L</sub> × d / (1 − (1 + d)<sup>−L</sup>)</p>
+      <p class="formula-legend" data-i18n="an_formulaNote"></p>
+    </details>
+  </section>
+
+  <section class="assumptions" aria-labelledby="assumptions-title">
+    <h2 id="assumptions-title" data-i18n="howTitle">Как считается результат</h2>
+    <p class="formula">TCO = P + (E × R × Y) + (M × Y)</p>
+    <p class="formula-legend" data-i18n="formulaLegend">TCO — общая стоимость владения, P — цена покупки, E — энергопотребление в год (кВт·ч), R — цена 1 кВт·ч, Y — срок в годах, M — обслуживание в год.</p>
+
+    <div class="assumptions-grid">
+      <div>
+        <h3 data-i18n="includedTitle">Что учтено</h3>
+        <ul>
+          <li data-i18n="inc1">Цена покупки.</li>
+          <li data-i18n="inc2">Электроэнергия: потребление в год × тариф × срок.</li>
+          <li data-i18n="inc3">Обслуживание: расходы в год × срок.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 data-i18n="excludedTitle">Что не учтено</h3>
+        <ul>
+          <li data-i18n="exc3">Крупные поломки и ремонт.</li>
+          <li data-i18n="exc4">Цена, за которую товар можно перепродать.</li>
+          <li data-i18n="exc6">Реальное потребление может отличаться от этикетки.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="asm-note" data-i18n="asmNote">Рост тарифов, стоимость денег во времени, рассрочку и разный срок службы можно учесть в режиме аналитика.</p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p data-i18n="footer">SmartChoice AI — учебный проект. Все расчёты выполняются в вашем браузере, введённые данные никуда не отправляются.</p>
+  </div>
+</footer>
+
+<script src="i18n.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
