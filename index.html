@@ -4,7 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SmartChoice AI — сравнение стоимости владения</title>
-  <meta name="description" content="Сравните два товара по общей стоимости владения: цена покупки, электроэнергия и обслуживание за выбранный срок.">
+  <meta name="description" content="SmartChoice AI — бесплатный калькулятор стоимости владения техникой: цена покупки, электроэнергия, обслуживание, рассрочка, NPV и EAC. Русский, oʻzbekcha, English.">
+  <meta name="author" content="Saidjon Murodov">
+  <link rel="canonical" href="https://saidjonstudy.github.io/smartchoice-ai/">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "SmartChoice AI",
+    "url": "https://saidjonstudy.github.io/smartchoice-ai/",
+    "description": "Free total cost of ownership calculator for household appliances: purchase price, electricity, maintenance, installment plans, NPV and EAC. Available in Russian, Uzbek and English.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "inLanguage": ["ru", "uz", "en"],
+    "softwareVersion": "SM 1.0",
+    "author": { "@type": "Person", "name": "Saidjon Murodov" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "UZS" }
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,18 +29,32 @@
 </head>
 <body>
 
-<header class="masthead">
-  <div class="wrap">
-    <div class="masthead-top">
-      <p class="brand">SmartChoice AI</p>
-      <div class="lang-switch" role="group" aria-label="Язык" data-i18n-aria="langNav">
-        <button type="button" data-lang="ru" lang="ru" aria-pressed="true">Рус</button>
-        <button type="button" data-lang="uz" lang="uz" aria-pressed="false">Oʻzb</button>
-        <button type="button" data-lang="en" lang="en" aria-pressed="false">Eng</button>
-      </div>
+<nav class="topnav" id="topnav" aria-label="Разделы сайта" data-i18n-aria="navLabel">
+  <div class="wrap topnav-inner">
+    <a class="brand" href="#top">SmartChoice AI</a>
+    <ul class="nav-links">
+      <li><a href="#compare-form" data-i18n="nav_calc">Калькулятор</a></li>
+      <li id="nav-results-item" hidden><a href="#results" data-i18n="nav_results">Результат</a></li>
+      <li><a href="#methodology" data-i18n="nav_method">Методология</a></li>
+      <li><a href="#about" data-i18n="nav_about">О проекте</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Язык" data-i18n-aria="langNav">
+      <button type="button" data-lang="ru" lang="ru" aria-pressed="true">Рус</button>
+      <button type="button" data-lang="uz" lang="uz" aria-pressed="false">Oʻzb</button>
+      <button type="button" data-lang="en" lang="en" aria-pressed="false">Eng</button>
     </div>
+  </div>
+</nav>
+
+<header class="masthead" id="top">
+  <div class="wrap">
     <h1 data-i18n="h1">Дешевле в магазине — не значит дешевле за пять лет</h1>
     <p class="lede" data-i18n="lede">Введите цену, энергопотребление и обслуживание двух товаров. Калькулятор покажет ориентировочную общую стоимость владения за выбранный срок и объяснит, откуда берётся разница.</p>
+    <ol class="steps" aria-label="Как это работает" data-i18n-aria="stepsLabel">
+      <li><span class="step-num" aria-hidden="true">1</span><span data-i18n="step1">Укажите тариф и срок</span></li>
+      <li><span class="step-num" aria-hidden="true">2</span><span data-i18n="step2">Введите данные двух товаров</span></li>
+      <li><span class="step-num" aria-hidden="true">3</span><span data-i18n="step3">Сравните результат и проверьте допущения</span></li>
+    </ol>
   </div>
 </header>
 
@@ -154,6 +185,12 @@
   </form>
 
   <section id="results" class="results" aria-labelledby="verdict" hidden>
+    <p id="shared-note" class="stale-note shared-note" data-i18n="sharedNote" hidden></p>
+    <div class="print-only print-summary">
+      <h2 data-i18n="printSummary">Исходные данные</h2>
+      <p id="print-date"></p>
+      <table class="year-table" id="print-table"></table>
+    </div>
     <p id="stale-note" class="stale-note" data-i18n="staleNote" hidden>Данные изменились, но не все поля заполнены верно. Ниже показан прошлый результат.</p>
 
     <h2 id="verdict" class="verdict" tabindex="-1"></h2>
@@ -213,7 +250,13 @@
     <ul id="explain" class="explain"></ul>
 
     <p class="disclaimer" data-i18n="disclaimer">Это оценка по введённым вами данным, а не гарантия экономии.</p>
-    <button type="button" id="edit-data" class="btn-secondary" data-i18n="btnEdit">Изменить данные</button>
+    <div class="result-actions">
+      <button type="button" id="share-btn" class="btn-primary" data-i18n="btnShare">Поделиться результатом</button>
+      <button type="button" id="print-btn" class="btn-secondary" data-i18n="btnPrint">PDF / печать</button>
+      <button type="button" id="edit-data" class="btn-link" data-i18n="btnEdit">Изменить данные</button>
+    </div>
+    <p id="share-status" class="share-status" role="status"></p>
+    <input id="share-url" class="share-url" type="text" readonly hidden aria-label="URL">
   </section>
 
   <section id="analyst" class="analyst" aria-labelledby="analyst-title" hidden>
@@ -344,7 +387,7 @@
     </details>
   </section>
 
-  <section class="assumptions" aria-labelledby="assumptions-title">
+  <section class="assumptions" id="methodology" aria-labelledby="assumptions-title">
     <h2 id="assumptions-title" data-i18n="howTitle">Как считается результат</h2>
     <p class="formula">TCO = P + (E × R × Y) + (M × Y)</p>
     <p class="formula-legend" data-i18n="formulaLegend">TCO — общая стоимость владения, P — цена покупки, E — энергопотребление в год (кВт·ч), R — цена 1 кВт·ч, Y — срок в годах, M — обслуживание в год.</p>
@@ -370,11 +413,39 @@
     <p class="asm-note" data-i18n="asmNote">Рост тарифов, стоимость денег во времени, рассрочку и разный срок службы можно учесть в режиме аналитика.</p>
   </section>
 
+  <section id="about" class="about" aria-labelledby="about-title">
+    <h2 id="about-title" data-i18n="about_title">О проекте</h2>
+    <div class="about-grid">
+      <div class="about-main">
+        <h3 data-i18n="about_why_title">Зачем этот сайт</h3>
+        <p data-i18n="about_why"></p>
+        <h3 data-i18n="about_how_title">Как обеспечивается точность</h3>
+        <p data-i18n="about_how"></p>
+        <p><a href="tests.html" class="text-link" data-i18n="about_tests">Открыть тесты</a></p>
+        <h3 data-i18n="about_ai_title">Использование ИИ</h3>
+        <p data-i18n="about_ai"></p>
+      </div>
+      <aside class="author-card" aria-labelledby="author-title">
+        <h3 id="author-title" data-i18n="about_author_title">Автор</h3>
+        <div class="author-row">
+          <span class="avatar" id="author-initials" aria-hidden="true"></span>
+          <div>
+            <p class="author-name" id="author-name"></p>
+            <p class="author-role" data-i18n="about_role">Автор проекта · абитуриент, направление «Финансы»</p>
+          </div>
+        </div>
+        <p id="author-github-wrap" hidden><a id="author-github" class="text-link" href="#" data-i18n="about_github">Исходный код на GitHub</a></p>
+        <p class="author-meta"><span data-i18n="about_version">Версия</span> <span id="author-version"></span></p>
+      </aside>
+    </div>
+  </section>
+
 </main>
 
 <footer class="site-footer">
   <div class="wrap">
     <p data-i18n="footer">SmartChoice AI — учебный проект. Все расчёты выполняются в вашем браузере, введённые данные никуда не отправляются.</p>
+    <p class="footer-meta" id="footer-meta"></p>
   </div>
 </footer>
 

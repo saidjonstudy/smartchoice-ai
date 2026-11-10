@@ -210,6 +210,70 @@
     return null;
   }
 
+  /* ---------- Ссылка «Поделиться» ----------
+     Все данные сравнения кладутся в адрес страницы после «#», например:
+     index.html#t=1000&y=5&ap=4000000&ae=300&am=100000&bp=3200000...
+     Сервер не нужен: ссылку открывает браузер получателя и заполняет форму сам.   */
+
+  const TERMS = [0, 3, 6, 9, 12, 18, 24, 36];   // варианты рассрочки, месяцев
+
+  function encodeShare(st) {
+    const p = new URLSearchParams();
+    p.set("t", st.tariff);
+    p.set("y", st.years);
+    ["a", "b"].forEach(function (k) {
+      const x = st[k];
+      if (x.name) p.set(k + "n", x.name);
+      p.set(k + "p", x.price);
+      p.set(k + "e", x.energy);
+      p.set(k + "m", x.maintenance);
+      if (x.term) { p.set(k + "t", x.term); p.set(k + "r", x.rate); }
+      if (x.life) p.set(k + "l", x.life);
+    });
+    if (st.g) p.set("g", st.g);
+    if (st.d) p.set("d", st.d);
+    if (st.lang) p.set("lang", st.lang);
+    return p.toString();
+  }
+
+  // Читает данные из ссылки. Возвращает null, если в ссылке нет сравнения.
+  // Значения полей остаются строками — их потом проверяет обычная проверка формы.
+  // Ползунки и списки ограничиваются допустимыми значениями.
+  function decodeShare(str) {
+    const p = new URLSearchParams(String(str || "").replace(/^#/, ""));
+    if (!p.has("t") || !p.has("ap") || !p.has("bp")) return null;
+    const num = function (k) {
+      if (!p.has(k)) return null;
+      const v = Number(p.get(k));
+      return Number.isFinite(v) ? v : null;
+    };
+    const clamp = function (v, min, max, step) {
+      if (v === null) return min;
+      return Math.min(max, Math.max(min, Math.round(v / step) * step));
+    };
+    const product = function (k) {
+      const term = num(k + "t");
+      return {
+        name: (p.get(k + "n") || "").slice(0, 40),
+        price: p.get(k + "p") || "",
+        energy: p.get(k + "e") || "",
+        maintenance: p.get(k + "m") || "",
+        term: TERMS.indexOf(term) !== -1 ? term : 0,
+        rate: clamp(num(k + "r"), 0, 60, 1),
+        life: clamp(num(k + "l"), 0, 30, 1)
+      };
+    };
+    return {
+      tariff: p.get("t") || "",
+      years: p.get("y") || "",
+      a: product("a"),
+      b: product("b"),
+      g: clamp(num("g"), 0, 30, 0.5),
+      d: clamp(num("d"), 0, 30, 0.5),
+      lang: p.get("lang")
+    };
+  }
+
   // ---------- Форматирование ----------
   // Форматируем числа сами, а не через Intl: в некоторых браузерах (например, на Android)
   // нет данных для узбекского языка, и числа выводились бы в чужом формате.
@@ -312,6 +376,8 @@
     calculateTCO: calculateTCO,
     cumulativeCosts: cumulativeCosts,
     breakEven: breakEven,
+    encodeShare: encodeShare,
+    decodeShare: decodeShare,
     pvFactors: pvFactors,
     loanPayment: loanPayment,
     purchasePV: purchasePV,
@@ -560,6 +626,34 @@
     const list = $("explain");
     list.replaceChildren();
     expl.points.forEach(function (p) { list.appendChild(el("li", "", p)); });
+
+    renderPrintSummary(v, nameA, nameB);
+  }
+
+  // Сводка исходных данных — видна только при печати / в PDF
+  function renderPrintSummary(v, nameA, nameB) {
+    const d = dict(lang);
+    const now = new Date();
+    const pad = function (n) { return (n < 10 ? "0" : "") + n; };
+    setText("print-date", d.printDate + ": " + pad(now.getDate()) + "." + pad(now.getMonth() + 1) + "." + now.getFullYear() +
+      " · " + d.tariffLabel + ": " + formatSum(v.tariff, lang) + " · " + d.yearsLabel + ": " + v.years + "\u00A0" + d.yearsWord(v.years));
+    const table = $("print-table");
+    table.replaceChildren();
+    const head = el("tr");
+    head.append(el("th", "", ""), el("th", "", nameA), el("th", "", nameB));
+    table.appendChild(head);
+    const optText = function (id) { const sel = $(id); return sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : ""; };
+    [
+      [d.priceLabel, formatSum(v["a-price"], lang), formatSum(v["b-price"], lang)],
+      [d.energyLabel, formatNumber(v["a-energy"], lang, 2) + "\u00A0" + d.unitKwh, formatNumber(v["b-energy"], lang, 2) + "\u00A0" + d.unitKwh],
+      [d.maintLabel, formatSum(v["a-maintenance"], lang), formatSum(v["b-maintenance"], lang)],
+      [d.an_payMethod, optText("a-term"), optText("b-term")],
+      [d.an_life, optText("a-life"), optText("b-life")]
+    ].forEach(function (r) {
+      const tr = el("tr");
+      tr.append(el("td", "", r[0]), el("td", "", r[1]), el("td", "", r[2]));
+      table.appendChild(tr);
+    });
   }
 
   /* ---------- Режим аналитика ---------- */
@@ -646,9 +740,6 @@
     }
     return s + '</svg>';
   }
-
-  // Варианты рассрочки (месяцы) и срока службы (годы)
-  const TERMS = [0, 3, 6, 9, 12, 18, 24, 36];
 
   // Заполняет выпадающие списки на текущем языке, сохраняя выбор
   function populateSelects() {
@@ -823,6 +914,7 @@
     staleNote.hidden = true;
     results.hidden = false;
     analyst.hidden = false;
+    $("nav-results-item").hidden = false;
     lastData = { values: res.values, nameA: productName("a-name", "productA"), nameB: productName("b-name", "productB") };
     render(lastData.values, lastData.nameA, lastData.nameB, animate);
     renderAnalyst();
@@ -832,6 +924,147 @@
   function scrollToResults() {
     results.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
     $("verdict").focus({ preventScroll: true });
+  }
+
+  /* ---------- Меню ---------- */
+
+  const nav = $("topnav");
+  const navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav-links a"));
+
+  // Высота меню нужна, чтобы при переходе к разделу заголовок не прятался под ним
+  function updateNavHeight() {
+    document.documentElement.style.setProperty("--nav-h", nav.offsetHeight + "px");
+  }
+
+  navLinks.forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      const target = document.querySelector(a.getAttribute("href"));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    });
+  });
+
+  // Подсветка текущего раздела в меню
+  let navTicking = false;
+  function updateActiveNav() {
+    navTicking = false;
+    const line = nav.offsetHeight + 40;
+    let current = null;
+    const visible = navLinks.filter(function (a) {
+      const sec = document.querySelector(a.getAttribute("href"));
+      return sec && !sec.hidden && sec.offsetParent !== null;
+    });
+    visible.forEach(function (a) {
+      if (document.querySelector(a.getAttribute("href")).getBoundingClientRect().top <= line) current = a;
+    });
+    // В самом низу страницы последний раздел не может подняться наверх — подсвечиваем его
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4 && visible.length) {
+      current = visible[visible.length - 1];
+    }
+    navLinks.forEach(function (a) {
+      if (a === current) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
+  }
+  window.addEventListener("scroll", function () {
+    if (!navTicking) { navTicking = true; requestAnimationFrame(updateActiveNav); }
+  }, { passive: true });
+
+  /* ---------- Поделиться и PDF ---------- */
+
+  function collectState() {
+    const v = lastData.values;
+    const prod = function (k) {
+      const c = creditOf(k);
+      return {
+        name: $(k + "-name").value.trim().slice(0, 40),
+        price: v[k + "-price"], energy: v[k + "-energy"], maintenance: v[k + "-maintenance"],
+        term: c ? c.months : 0, rate: c ? Number($(k + "-rate").value) : 0,
+        life: Number($(k + "-life").value)
+      };
+    };
+    return {
+      tariff: v.tariff, years: v.years, a: prod("a"), b: prod("b"),
+      g: Number($("growth").value), d: Number($("discount").value), lang: lang
+    };
+  }
+
+  function shareResult() {
+    if (!lastData) return;
+    const url = location.href.split("#")[0] + "#" + encodeShare(collectState());
+    const status = $("share-status"), field = $("share-url");
+    field.hidden = true;
+    status.textContent = "";
+
+    function showManual() {
+      status.textContent = t("shareManual");
+      field.value = url;
+      field.hidden = false;
+      field.focus();
+      field.select();
+    }
+    function copy() {
+      if (!navigator.clipboard) { showManual(); return; }
+      navigator.clipboard.writeText(url).then(function () { status.textContent = t("shareCopied"); }, showManual);
+    }
+
+    // На телефоне — системное меню «Поделиться» (Telegram и др.), на компьютере — копирование
+    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+      navigator.share({ title: t("shareText"), url: url }).catch(function (e) {
+        if (!e || e.name !== "AbortError") copy();
+      });
+    } else {
+      copy();
+    }
+  }
+
+  $("share-btn").addEventListener("click", shareResult);
+  $("print-btn").addEventListener("click", function () {
+    try { window.print(); } catch (e) { /* печать недоступна в этом окне */ }
+  });
+
+  // Заполняет форму данными из ссылки и считает
+  function applySharedState(st) {
+    $("tariff").value = st.tariff;
+    $("years").value = st.years;
+    ["a", "b"].forEach(function (k) {
+      const x = st[k];
+      $(k + "-name").value = x.name;
+      [["price", "-price"], ["energy", "-energy"], ["maintenance", "-maintenance"]].forEach(function (f) {
+        const n = parseNumber(x[f[0]], "en");
+        $(k + f[1]).value = (n !== null && !Number.isNaN(n)) ? formatNumber(n, lang, 2) : x[f[0]];
+      });
+      $(k + "-term").value = String(x.term);
+      $(k + "-rate").value = String(x.rate);
+      $(k + "-life").value = String(x.life);
+    });
+    ["tariff", "years"].forEach(function (id) {
+      const n = parseNumber($(id).value, "en");
+      if (n !== null && !Number.isNaN(n)) $(id).value = formatNumber(n, lang, 2);
+    });
+    $("growth").value = String(st.g);
+    $("discount").value = String(st.d);
+    updateSliderOutputs();
+    if (run(true, true)) {
+      $("shared-note").hidden = false;
+      setTimeout(scrollToResults, 50);
+    }
+  }
+
+  /* ---------- Автор ---------- */
+
+  function renderAuthor() {
+    const a = window.SC_AUTHOR || {};
+    const name = a.name || "";
+    setText("author-name", name);
+    setText("author-initials", name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0); }).join("").toUpperCase());
+    setText("author-version", (a.version || "") + (a.year ? " · " + a.year : ""));
+    if (a.github) {
+      $("author-github").href = a.github;
+      $("author-github-wrap").hidden = false;
+    }
+    setText("footer-meta", "© " + (a.year || "") + " " + name + (a.version ? " · " + a.version : ""));
   }
 
   /* ---------- Язык ---------- */
@@ -882,16 +1115,19 @@
 
     updateSliderOutputs();
     populateSelects();
+    if ($("share-status").textContent) $("share-status").textContent = "";
+    updateNavHeight();
     updateCreditUI();
 
     try { localStorage.setItem("smartchoice-lang", lang); } catch (e) { /* хранилище недоступно — не страшно */ }
   }
 
-  function detectLang() {
+  function detectLang(shared) {
     try {
       const saved = localStorage.getItem("smartchoice-lang");
       if (saved && I18N[saved]) return saved;
     } catch (e) { /* хранилище недоступно */ }
+    if (shared && shared.lang && I18N[shared.lang]) return shared.lang;
     const nav = (navigator.language || "ru").toLowerCase();
     if (nav.indexOf("uz") === 0) return "uz";
     if (nav.indexOf("en") === 0) return "en";
@@ -973,6 +1209,10 @@
     formError.hidden = true;
     results.hidden = true;
     analyst.hidden = true;
+    $("nav-results-item").hidden = true;
+    $("shared-note").hidden = true;
+    $("share-status").textContent = "";
+    $("share-url").hidden = true;
     lastData = null;
     $("growth").value = "0";
     $("discount").value = "0";
@@ -992,6 +1232,12 @@
     $("a-price").focus({ preventScroll: true });
   });
 
-  setLang(detectLang(), true);
+  const sharedState = decodeShare(location.hash);
+  renderAuthor();
+  setLang(detectLang(sharedState), true);
+  updateNavHeight();
+  window.addEventListener("resize", updateNavHeight);
+  if (sharedState) applySharedState(sharedState);
+  updateActiveNav();
 
 })();

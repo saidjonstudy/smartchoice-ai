@@ -148,6 +148,27 @@ function runSmartChoiceTests(S) {
     return Math.abs(pv - npv) < 1e-6 || pv + " ≠ " + npv;
   });
 
+  // --- Ссылка «Поделиться» ---
+  const shareState = {
+    tariff: 1000, years: 5, g: 10, d: 15, lang: "uz",
+    a: { name: "Холодильник A & «тест»", price: 4000000, energy: 300, maintenance: 100000, term: 0, rate: 0, life: 12 },
+    b: { name: "B", price: 3200000, energy: 520, maintenance: 150000, term: 12, rate: 24, life: 9 }
+  };
+  check("Ссылка: данные после кодирования и чтения совпадают", function () {
+    const st = S.decodeShare("#" + S.encodeShare(shareState));
+    const ok = st && Number(st.tariff) === 1000 && Number(st.years) === 5 && st.g === 10 && st.d === 15 && st.lang === "uz" &&
+      st.a.name === shareState.a.name && Number(st.a.price) === 4000000 && st.a.life === 12 && st.a.term === 0 &&
+      st.b.term === 12 && st.b.rate === 24 && st.b.life === 9 && Number(st.b.energy) === 520;
+    return ok || JSON.stringify(st);
+  });
+  check("Ссылка без данных сравнения (например, #about) не применяется", function () {
+    return S.decodeShare("#about") === null && S.decodeShare("") === null;
+  });
+  check("Ссылка: недопустимые значения ограничиваются (рассрочка 7 мес. → нет, 999 % → 60 %, срок 99 → 30)", function () {
+    const st = S.decodeShare("t=1&ap=1&bp=1&at=7&ar=5&bt=12&br=999&al=99&g=-4&d=abc");
+    return (st.a.term === 0 && st.b.rate === 60 && st.a.life === 30 && st.g === 0 && st.d === 0) || JSON.stringify(st);
+  });
+
   // --- Чтение чисел ---
   check("«4 000 000» читается как 4000000", function () { return S.parseNumber("4 000 000") === 4000000; });
   check("«1000,5» читается как 1000.5", function () { return S.parseNumber("1000,5") === 1000.5; });
