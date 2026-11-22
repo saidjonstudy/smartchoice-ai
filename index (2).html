@@ -1,0 +1,3675 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SmartChoice Analytics — Total Cost of Ownership Calculator</title>
+  <meta name="description" content="Free total cost of ownership (TCO) calculator with an NPV mode. Compare two products by price, electricity, maintenance and resale value.">
+  <link rel="canonical" href="https://saidjonstudy.github.io/smartchoice-ai/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SmartChoice Analytics">
+  <meta property="og:title" content="SmartChoice Analytics — Total Cost of Ownership Calculator">
+  <meta property="og:description" content="Free total cost of ownership (TCO) calculator with an NPV mode. Compare two products by price, electricity, maintenance and resale value.">
+  <meta property="og:url" content="https://saidjonstudy.github.io/smartchoice-ai/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SmartChoice Analytics — Total Cost of Ownership Calculator">
+  <meta name="twitter:description" content="Free total cost of ownership (TCO) calculator with an NPV mode. Compare two products by price, electricity, maintenance and resale value.">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SmartChoice Analytics",
+  "alternateName": "SmartChoice AI",
+  "url": "https://saidjonstudy.github.io/smartchoice-ai/",
+  "description": "Free total cost of ownership (TCO) calculator with an NPV mode. Compare two products by price, electricity, maintenance and resale value.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any (web browser)",
+  "inLanguage": [
+    "en",
+    "ru",
+    "uz"
+  ],
+  "browserRequirements": "Requires JavaScript",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Saidjon Murodov",
+    "url": "https://github.com/saidjonstudy"
+  }
+}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>html.sc-lang-pending body { visibility: hidden; }</style>
+  <script>
+  /* Если в адресе указан ?lang=en (или uz), прячем страницу, пока не применится язык —
+     так русский текст не мелькает перед английским. Запасной таймер снимает скрытие в любом случае. */
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search).get("lang");
+      if (q && /^(en|uz)/i.test(q.trim())) {
+        document.documentElement.classList.add("sc-lang-pending");
+        setTimeout(function () { document.documentElement.classList.remove("sc-lang-pending"); }, 2500);
+      }
+    } catch (e) { /* ничего страшного */ }
+  })();
+  </script>
+  <style>
+/* SmartChoice Analytics — внешний вид сайта */
+
+/* ---------- Цвета (светлая и тёмная тема) ---------- */
+:root {
+  --bg: #F3F5F8;
+  --surface: #FFFFFF;
+  --ink: #172033;
+  --muted: #566074;
+  --line: #D6DCE4;
+  --a: #0E7A6B;          /* товар A — сине-зелёный */
+  --b: #6446C2;          /* товар B — фиолетовый */
+  --seg-purchase: #2B3A55;
+  --seg-energy: #E0A526;
+  --seg-maint: #9AAAC2;
+  --error: #B42318;
+  --focus: #1D5FD1;
+  --hero-bg: #172033;    /* тёмная шапка */
+  --hero-dot: #2F3F5C;   /* точки на шапке */
+  --hero-ink: #F3F5F8;
+  --hero-muted: #A9B4C6;
+  --hero-edge: transparent;
+  color-scheme: light;
+
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151D;
+    --surface: #1A202B;
+    --ink: #E8ECF2;
+    --muted: #9AA4B5;
+    --line: #2E3644;
+    --a: #3FB8A5;
+    --b: #A08BF2;
+    --seg-purchase: #B4C0D4;
+    --seg-energy: #E8B33A;
+    --seg-maint: #5E7393;
+    --error: #FF8A7A;
+    --focus: #7AA7FF;
+    --hero-bg: #0A0E15;
+    --hero-dot: #222D40;
+    --hero-edge: #2E3644;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151D;
+  --surface: #1A202B;
+  --ink: #E8ECF2;
+  --muted: #9AA4B5;
+  --line: #2E3644;
+  --a: #3FB8A5;
+  --b: #A08BF2;
+  --seg-purchase: #B4C0D4;
+  --seg-energy: #E8B33A;
+  --seg-maint: #5E7393;
+  --error: #FF8A7A;
+  --focus: #7AA7FF;
+  --hero-bg: #0A0E15;
+  --hero-dot: #222D40;
+  --hero-edge: #2E3644;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+
+/* --nav-h — высота закреплённого меню; уточняется скриптом */
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--nav-h, 64px) + 12px); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1, h2, h3 { line-height: 1.2; margin: 0; }
+h2 { font-size: 1.375rem; font-weight: 700; }
+h3 { font-size: 1.125rem; font-weight: 600; margin: 32px 0 12px; }
+
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Шапка (тёмная, с точками) ---------- */
+.masthead {
+  padding: 44px 0 104px;
+  background-color: var(--hero-bg);
+  background-image: radial-gradient(var(--hero-dot) 1.2px, transparent 1.6px);
+  background-size: 16px 16px;
+  border-bottom: 1px solid var(--hero-edge);
+  color: var(--hero-ink);
+}
+/* полоса под «чёлкой» телефона того же цвета, что и шапка */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--hero-bg);
+  z-index: 10;
+}
+/* ---------- Закреплённое меню ---------- */
+.topnav {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--hero-bg);
+  border-bottom: 1px solid var(--hero-dot);
+  color: var(--hero-ink);
+}
+.topnav-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  min-height: 60px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.brand { font-weight: 700; font-size: 1.05rem; color: var(--hero-ink); text-decoration: none; white-space: nowrap; }
+.nav-links {
+  display: flex;
+  gap: 2px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.nav-links a {
+  display: block;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: var(--hero-muted);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.nav-links a:hover { color: var(--hero-ink); }
+.nav-links a[aria-current="true"] { color: var(--hero-ink); background: var(--hero-dot); }
+@media (max-width: 859px) {
+  .topnav-inner { display: grid; grid-template-columns: 1fr auto; }
+  .brand { grid-row: 1; grid-column: 1; }
+  .lang-switch { grid-row: 1; grid-column: 2; }
+  .nav-links {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    margin: 0 -20px;
+    padding: 0 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+}
+
+/* ---------- Три шага ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 28px;
+  max-width: 920px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.steps li { display: flex; align-items: center; gap: 12px; color: var(--hero-ink); font-weight: 500; }
+.step-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #E8B33A;
+  color: #172033;
+  font-weight: 700;
+}
+
+/* Переключатель языка */
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--hero-dot);
+  border-radius: 999px;
+  background: var(--hero-bg);
+}
+.lang-switch button {
+  min-width: 52px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hero-muted);
+  font-weight: 600;
+  font-size: .95rem;
+}
+.lang-switch button:hover { color: var(--hero-ink); }
+.lang-switch button[aria-pressed="true"] { background: var(--hero-ink); color: var(--hero-bg); }
+.masthead h1 {
+  font-size: clamp(1.9rem, 4.6vw, 3.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  max-width: 20ch;
+}
+.lede { margin: 18px 0 0; max-width: 60ch; font-size: 1.125rem; color: var(--hero-muted); }
+
+/* ---------- Форма ---------- */
+/* Первая карточка «наезжает» на тёмную шапку */
+.conditions {
+  position: relative;
+  margin: -64px 0 20px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.section-hint { margin: 4px 0 16px; color: var(--muted); }
+.conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0 24px;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 760px) {
+  .products { grid-template-columns: 1fr 1fr; }
+}
+
+.product {
+  margin: 0;
+  min-width: 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--a);
+  border-radius: 12px;
+}
+.product-b { border-top-color: var(--b); }
+.product legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 16px;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.product legend + * { clear: both; }
+
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-weight: 600; margin-bottom: 6px; }
+.optional { font-weight: 400; color: var(--muted); }
+
+.input-unit {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+}
+.input-unit:focus-within { border-color: var(--focus); outline: 3px solid var(--focus); outline-offset: 1px; }
+.input-unit input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+}
+.input-unit input:focus { outline: none; }
+.input-unit input::placeholder { color: var(--muted); opacity: .7; font-size: 1rem; }
+.unit {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .95rem;
+  white-space: nowrap;
+}
+
+.help { margin: 6px 0 0; color: var(--muted); font-size: .92rem; }
+.error { margin: 6px 0 0; color: var(--error); font-weight: 500; font-size: .95rem; }
+.field.has-error .input-unit { border-color: var(--error); }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+button { font: inherit; cursor: pointer; }
+.btn-primary, .btn-secondary {
+  min-height: 48px;
+  padding: 12px 26px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.btn-primary { background: var(--ink); color: var(--bg); border: 1.5px solid var(--ink); }
+.btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.btn-link {
+  min-height: 48px;
+  padding: 12px 8px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.example-note { margin: 10px 0 0; color: var(--muted); font-size: .9rem; }
+.form-error { margin: 16px 0 0; color: var(--error); font-weight: 600; }
+
+/* ---------- Результаты ---------- */
+.results {
+  margin-top: 40px;
+  padding: clamp(20px, 4vw, 36px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.stale-note {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--seg-energy);
+  color: var(--muted);
+}
+.verdict {
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  line-height: 1.3;
+  max-width: 34ch;
+}
+.verdict:focus { outline: none; }
+
+.totals {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 28px;
+}
+@media (min-width: 640px) {
+  .totals { grid-template-columns: 1fr 1fr; }
+}
+.total { padding-left: 16px; border-left: 5px solid var(--a); }
+.total-b { border-left-color: var(--b); }
+.total-name { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.total-sum {
+  margin: 2px 0 12px;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.breakdown { margin: 0; }
+.breakdown div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+.breakdown dt { color: var(--muted); }
+.breakdown dd { margin: 0; font-variant-numeric: tabular-nums; text-align: right; }
+.breakdown-annual dt, .breakdown-annual dd { font-weight: 600; color: var(--ink); }
+
+/* Полосы «из чего складывается сумма» */
+.stack { display: grid; gap: 14px; }
+.stack-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+.stack-head { display: flex; justify-content: space-between; gap: 12px; }
+.stack-name { font-weight: 600; overflow-wrap: anywhere; }
+.stack-value { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.stack-track { height: 30px; }
+.stack-bar {
+  display: flex;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: width .7s cubic-bezier(.2, .7, .2, 1);
+}
+.seg { height: 100%; }
+.seg + .seg { border-left: 2px solid var(--surface); }
+.seg-purchase { background: var(--seg-purchase); }
+.seg-energy { background: var(--seg-energy); }
+.seg-maint { background: var(--seg-maint); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: .95rem;
+}
+.legend li { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.legend-lines { margin: 0 0 8px; color: var(--ink); }
+.legend-lines span { overflow-wrap: anywhere; }
+.line-a { stroke: var(--a); stroke-width: 3; }
+.line-b { stroke: var(--b); stroke-width: 3; stroke-dasharray: 7 5; }
+
+.chart-intro { margin: 0 0 12px; color: var(--muted); max-width: 65ch; }
+.chart svg { display: block; width: 100%; height: auto; max-width: 100%; }
+
+.year-details { margin-top: 16px; }
+.year-details summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+.table-scroll { overflow-x: auto; }
+.year-table { border-collapse: collapse; width: 100%; min-width: 440px; font-variant-numeric: tabular-nums; }
+.year-table th, .year-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+.year-table th:first-child, .year-table td:first-child { text-align: left; }
+.year-table th { font-weight: 600; }
+
+.explain { margin: 0; padding-left: 1.2em; max-width: 68ch; }
+.explain li { margin-bottom: 10px; }
+.disclaimer { margin: 24px 0 20px; color: var(--muted); }
+.result-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.share-status { margin: 12px 0 0; min-height: 1.5em; color: var(--muted); }
+.share-url {
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: .95rem;
+}
+.shared-note { border-left-color: var(--a); }
+.print-only { display: none; }
+
+/* ---------- Режим аналитика (тёмная панель в стиле шапки) ---------- */
+.analyst {
+  /* внутри панели переопределяем цвета — графики и таблицы подстраиваются сами */
+  --surface: #1E2840;
+  --ink: #F3F5F8;
+  --muted: #A9B4C6;
+  --line: #33425E;
+  --a: #3FB8A5;
+  --b: #A08BF2;
+  --focus: #7AA7FF;
+  --error: #FF8A7A;
+  color-scheme: dark;
+  margin-top: 24px;
+  padding: clamp(20px, 4vw, 36px);
+  border-radius: 14px;
+  border: 1px solid var(--hero-edge);
+  background-color: var(--hero-bg);
+  background-image: radial-gradient(var(--hero-dot) 1.2px, transparent 1.6px);
+  background-size: 16px 16px;
+  color: var(--ink);
+}
+.analyst-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.analyst-head h2 { font-size: clamp(1.35rem, 3vw, 1.75rem); }
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--seg-energy);
+  color: #172033;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.analyst-intro { margin: 12px 0 0; color: var(--muted); max-width: 68ch; }
+
+.sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px 32px;
+  margin-top: 24px;
+}
+.slider-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.slider-top label { font-weight: 600; }
+.slider-top output {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #E8B33A;
+  white-space: nowrap;
+}
+.slider-field input[type="range"],
+.an-row input[type="range"] {
+  width: 100%;
+  height: 36px;
+  margin: 4px 0 0;
+  accent-color: #E8B33A;
+  cursor: pointer;
+}
+
+.an-verdict {
+  margin: 24px 0 0;
+  padding: 16px 18px;
+  border-left: 4px solid #E8B33A;
+  background: var(--surface);
+  border-radius: 0 10px 10px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 72ch;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.fact {
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.fact-label { margin: 0; color: var(--muted); font-weight: 500; }
+.fact-value {
+  margin: 4px 0 6px;
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #E8B33A;
+}
+.fact-desc { margin: 0; color: var(--muted); font-size: .95rem; }
+
+.scen-table td:last-child { font-weight: 600; }
+.analyst h3 { margin-top: 32px; }
+.an-hint { color: var(--muted); margin-top: -4px; }
+.an-prods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+.an-prod {
+  margin: 0;
+  min-width: 0;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--a);
+  border-radius: 12px;
+}
+.an-prod-b { border-left-color: var(--b); }
+.an-prod legend { float: left; width: 100%; padding: 0; margin-bottom: 10px; font-weight: 700; overflow-wrap: anywhere; }
+.an-prod legend + * { clear: both; }
+.an-row { margin-bottom: 14px; }
+.an-row:last-child { margin-bottom: 0; }
+.an-row > label { display: block; font-weight: 600; margin-bottom: 6px; }
+.an-select {
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--hero-bg);
+  color: var(--ink);
+  font: inherit;
+}
+.an-row .slider-top output { font-size: 1.25rem; }
+.credit-info { margin: 6px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.eac-hint { margin: 0; padding: 14px 16px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); }
+.fact-a { border-left: 5px solid var(--a); }
+.fact-b { border-left: 5px solid var(--b); }
+.asm-note { margin: 16px 0 0; color: var(--muted); max-width: 70ch; }
+@media (max-width: 560px) {
+  .scen-table { min-width: 0; }
+  .scen-table thead { display: none; }
+  .scen-table tr { display: block; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .scen-table td { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border: 0; text-align: right; }
+  .scen-table td::before { content: attr(data-label); color: var(--muted); font-weight: 400; text-align: left; }
+  .scen-table td.scen-name { display: block; font-weight: 700; padding-bottom: 6px; }
+  .scen-table td.scen-name::before { content: none; }
+}
+.formula-npv { font-size: clamp(1rem, 2.6vw, 1.25rem); }
+.formula-npv sub, .formula-npv sup { font-size: .7em; }
+
+/* ---------- Допущения ---------- */
+.assumptions { margin: 56px 0 24px; }
+.formula {
+  margin: 16px 0 8px;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: .01em;
+  overflow-wrap: anywhere;
+}
+.formula-legend { margin: 0; color: var(--muted); max-width: 70ch; }
+.assumptions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0 32px;
+}
+.assumptions ul { margin: 0; padding-left: 1.2em; }
+.assumptions li { margin-bottom: 6px; }
+
+/* ---------- О проекте ---------- */
+.about { margin: 56px 0 40px; padding-top: 40px; border-top: 1px solid var(--line); }
+.about-grid { display: grid; grid-template-columns: 1fr; gap: 8px 48px; }
+@media (min-width: 860px) {
+  .about-grid { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+.about-main p { margin: 0 0 8px; max-width: 68ch; }
+.author-card {
+  align-self: start;
+  margin-top: 32px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.author-card h3 { margin: 0 0 14px; }
+.author-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--hero-bg);
+  color: #E8B33A;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.author-name { margin: 0; font-weight: 700; font-size: 1.125rem; overflow-wrap: anywhere; }
+.author-role { margin: 2px 0 0; color: var(--muted); }
+.author-card p { margin: 0 0 6px; }
+.author-meta { color: var(--muted); font-size: .92rem; }
+.text-link { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+.site-footer { border-top: 1px solid var(--line); padding: 24px 0 32px; color: var(--muted); font-size: .92rem; }
+.site-footer p { margin: 0; max-width: 70ch; }
+.site-footer .footer-meta { margin-top: 6px; }
+
+/* ---------- Страница тестов ---------- */
+.tests { padding: 40px 20px; }
+.test-summary { font-size: 1.25rem; font-weight: 700; }
+.pass { color: var(--a); font-weight: 600; }
+.fail { color: var(--error); font-weight: 600; }
+.tests .year-table td { text-align: left; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-bar { transition: none; }
+}
+
+/* ---------- Готовые примеры ---------- */
+.presets {
+  position: relative;
+  margin: -64px 0 20px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.presets + .conditions { margin-top: 0; }
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 64px;
+  padding: 12px 14px;
+  text-align: left;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+}
+.preset-btn:hover { border-color: var(--ink); }
+.preset-btn[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.preset-title { font-weight: 600; line-height: 1.3; }
+.preset-meta { font-size: .88rem; color: var(--muted); }
+.preset-note, .case-note {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-left: 4px solid #E8B33A;
+  background: var(--bg);
+  border-radius: 0 8px 8px 0;
+  font-weight: 400;
+  font-size: .95rem;
+  color: var(--ink);
+  max-width: 80ch;
+}
+.case-note { margin: 0 0 16px; }
+
+/* ---------- Печать и PDF: чистый отчёт на одну страницу A4 ---------- */
+#print-report {
+  --bg: #fff; --surface: #fff; --ink: #111; --muted: #4a5568; --line: #c9ced6;
+  --a: #0E7A6B; --b: #6446C2; --hero-bg: #fff;
+  color: #111;
+  font-size: 9pt;
+  line-height: 1.35;
+}
+.pr-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 8mm; padding-bottom: 3mm; margin-bottom: 4mm; border-bottom: 2px solid #111; }
+.pr-brand { font-weight: 700; font-size: 8.5pt; letter-spacing: .04em; text-transform: uppercase; color: #4a5568; }
+.pr-title { margin: 1mm 0 0; font-size: 15pt; font-weight: 700; line-height: 1.15; }
+.pr-sub { margin: 1mm 0 0; font-size: 10pt; color: #222; overflow-wrap: anywhere; }
+.pr-meta { flex: none; text-align: right; font-size: 8pt; color: #4a5568; }
+.pr-box { margin-bottom: 4mm; padding: 3mm 4mm; border: 1px solid #111; border-left-width: 5px; break-inside: avoid; }
+.pr-box h2 { margin: 0 0 1mm; font-size: 8pt; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #4a5568; }
+.pr-verdict { margin: 0; font-size: 11pt; font-weight: 700; line-height: 1.3; }
+.pr-verdict2 { margin: 1.5mm 0 0; font-size: 9pt; }
+.pr-params { margin: 1.5mm 0 0; font-size: 8pt; color: #4a5568; }
+.pr-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 5mm; margin-bottom: 4mm; break-inside: avoid; }
+.pr-section h3 { margin: 0 0 1.5mm; font-size: 9pt; font-weight: 700; }
+.pr-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; font-variant-numeric: tabular-nums; }
+.pr-table th, .pr-table td { padding: .9mm 1.5mm; border-bottom: .5pt solid #c9ced6; text-align: right; vertical-align: top; }
+.pr-table th:first-child, .pr-table td:first-child { text-align: left; }
+.pr-table thead th { border-bottom: 1pt solid #111; font-weight: 700; }
+.pr-table .pr-group td { padding-top: 1.8mm; font-size: 7.5pt; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #4a5568; border-bottom: 0; }
+.pr-table .pr-total td { font-weight: 700; border-top: 1pt solid #111; }
+.pr-table .pr-kv td:last-child { font-weight: 600; }
+.pr-chart { margin-bottom: 3mm; break-inside: avoid; }
+.pr-chart svg { display: block; width: 100%; height: auto; }
+.pr-legend { display: flex; gap: 6mm; margin: 0 0 1mm; padding: 0; list-style: none; font-size: 8.5pt; }
+.pr-legend li { display: flex; align-items: center; gap: 2mm; }
+.pr-legend span { white-space: nowrap; }
+.pr-years { margin-bottom: 3mm; break-inside: avoid; }
+.pr-years .pr-table { font-size: 8pt; }
+.pr-years.is-dense .pr-table { font-size: 7.2pt; }
+.pr-years .pr-table th, .pr-years .pr-table td { text-align: right; padding: .8mm 1mm; white-space: nowrap; }
+.pr-years .pr-table th:first-child, .pr-years .pr-table td:first-child { text-align: left; white-space: normal; }
+.pr-foot { margin-top: 2mm; padding-top: 2mm; border-top: .5pt solid #888; font-size: 7.5pt; color: #4a5568; }
+.pr-foot p { margin: 0 0 1mm; }
+.pr-foot .pr-formula { font-family: ui-monospace, Menlo, Consolas, monospace; color: #111; }
+
+@media print {
+  @page { size: A4; margin: 10mm 12mm; }
+  html, body { background: #fff !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body::before, .topnav, .result-actions, .share-status, .share-url { display: none !important; }
+  /* Когда расчёт сделан, печатаем только отчёт: без меню, форм и ползунков */
+  body.has-report > *:not(#print-report) { display: none !important; }
+  body.has-report #print-report { display: block; }
+}
+
+</style>
+</head>
+<body>
+
+<nav class="topnav" id="topnav" aria-label="Разделы сайта" data-i18n-aria="navLabel">
+  <div class="wrap topnav-inner">
+    <a class="brand" href="#top">SmartChoice Analytics</a>
+    <ul class="nav-links">
+      <li><a href="#compare-form" data-i18n="nav_calc">Калькулятор</a></li>
+      <li id="nav-results-item" hidden><a href="#results" data-i18n="nav_results">Результат</a></li>
+      <li><a href="#methodology" data-i18n="nav_method">Методология</a></li>
+      <li><a href="#about" data-i18n="nav_about">О проекте</a></li>
+    </ul>
+    <div class="lang-switch" role="group" aria-label="Язык" data-i18n-aria="langNav">
+      <button type="button" data-lang="ru" lang="ru" aria-pressed="true">Рус</button>
+      <button type="button" data-lang="uz" lang="uz" aria-pressed="false">Oʻzb</button>
+      <button type="button" data-lang="en" lang="en" aria-pressed="false">Eng</button>
+    </div>
+  </div>
+</nav>
+
+<header class="masthead" id="top">
+  <div class="wrap">
+    <h1 data-i18n="h1">Дешевле в магазине — не значит дешевле за пять лет</h1>
+    <p class="lede" data-i18n="lede">Введите цену, энергопотребление и обслуживание двух товаров. Калькулятор покажет ориентировочную общую стоимость владения за выбранный срок и объяснит, откуда берётся разница.</p>
+    <ol class="steps" aria-label="Как это работает" data-i18n-aria="stepsLabel">
+      <li><span class="step-num" aria-hidden="true">1</span><span data-i18n="step1">Укажите тариф и срок</span></li>
+      <li><span class="step-num" aria-hidden="true">2</span><span data-i18n="step2">Введите данные двух товаров</span></li>
+      <li><span class="step-num" aria-hidden="true">3</span><span data-i18n="step3">Сравните результат и проверьте допущения</span></li>
+    </ol>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <form id="compare-form" novalidate>
+
+    <section class="presets" aria-labelledby="presets-title">
+      <h2 id="presets-title" data-i18n="presetsTitle">Быстрый старт: готовые примеры</h2>
+      <p class="section-hint" data-i18n="presetsHint">Выберите жизненную ситуацию — поля заполнятся сами, а расчёт запустится сразу.</p>
+      <div class="preset-grid" id="preset-grid" role="group" aria-labelledby="presets-title"></div>
+      <p id="preset-note" class="preset-note" hidden></p>
+      <p class="example-note" data-i18n="exampleNote">Готовые примеры учебные: это округлённые ориентиры, а не данные конкретных моделей. Перед решением подставьте реальные цены и тариф.</p>
+    </section>
+
+    <section class="conditions" aria-labelledby="cond-title">
+      <h2 id="cond-title" data-i18n="condTitle">Общие условия</h2>
+      <p class="section-hint" data-i18n="condHint">Одинаковы для обоих товаров.</p>
+
+      <div class="conditions-grid">
+        <div class="field">
+          <label for="tariff" data-i18n="tariffLabel">Цена 1 кВт·ч электроэнергии</label>
+          <div class="input-unit">
+            <input id="tariff" name="tariff" type="text" inputmode="decimal" autocomplete="off" aria-describedby="tariff-help tariff-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="tariff-help" data-i18n="tariffHelp">Указана в квитанции за свет.</p>
+          <p class="error" id="tariff-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="years" data-i18n="yearsLabel">Срок сравнения</label>
+          <div class="input-unit">
+            <input id="years" name="years" type="text" inputmode="numeric" autocomplete="off" aria-describedby="years-help years-err">
+            <span class="unit" data-i18n="unitYears">лет</span>
+          </div>
+          <p class="help" id="years-help" data-i18n="yearsHelp">Сколько лет вы планируете пользоваться товаром, от 1 до 30.</p>
+          <p class="error" id="years-err" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="products">
+
+      <fieldset class="product product-a">
+        <legend data-i18n="productA">Товар A</legend>
+
+        <div class="field">
+          <label for="a-name"><span data-i18n="nameLabel">Название</span> <span class="optional" data-i18n="optional">(необязательно)</span></label>
+          <div class="input-unit">
+            <input id="a-name" name="a-name" type="text" maxlength="40" autocomplete="off" data-i18n-ph="namePhA">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="a-price" data-i18n="priceLabel">Цена покупки</label>
+          <div class="input-unit">
+            <input id="a-price" name="a-price" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-price-help a-price-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="a-price-help" data-i18n="priceHelp">Цена в магазине.</p>
+          <p class="error" id="a-price-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="a-energy" data-i18n="energyLabel">Энергопотребление в год</label>
+          <div class="input-unit">
+            <input id="a-energy" name="a-energy" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-energy-help a-energy-err">
+            <span class="unit" data-i18n="unitKwh">кВт·ч</span>
+          </div>
+          <p class="help" id="a-energy-help" data-i18n="energyHelp">Указано на энергетической этикетке. Если товар не работает от электричества, введите 0.</p>
+          <p class="error" id="a-energy-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="a-maintenance" data-i18n="maintLabel">Обслуживание в год</label>
+          <div class="input-unit">
+            <input id="a-maintenance" name="a-maintenance" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-maintenance-help a-maintenance-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="a-maintenance-help" data-i18n="maintHelp">Фильтры, чистка, сервис — примерно. Если расходов нет, введите 0.</p>
+          <p class="error" id="a-maintenance-err" hidden></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="product product-b">
+        <legend data-i18n="productB">Товар B</legend>
+
+        <div class="field">
+          <label for="b-name"><span data-i18n="nameLabel">Название</span> <span class="optional" data-i18n="optional">(необязательно)</span></label>
+          <div class="input-unit">
+            <input id="b-name" name="b-name" type="text" maxlength="40" autocomplete="off" data-i18n-ph="namePhB">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="b-price" data-i18n="priceLabel">Цена покупки</label>
+          <div class="input-unit">
+            <input id="b-price" name="b-price" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-price-help b-price-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="b-price-help" data-i18n="priceHelp">Цена в магазине.</p>
+          <p class="error" id="b-price-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="b-energy" data-i18n="energyLabel">Энергопотребление в год</label>
+          <div class="input-unit">
+            <input id="b-energy" name="b-energy" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-energy-help b-energy-err">
+            <span class="unit" data-i18n="unitKwh">кВт·ч</span>
+          </div>
+          <p class="help" id="b-energy-help" data-i18n="energyHelp">Указано на энергетической этикетке. Если товар не работает от электричества, введите 0.</p>
+          <p class="error" id="b-energy-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="b-maintenance" data-i18n="maintLabel">Обслуживание в год</label>
+          <div class="input-unit">
+            <input id="b-maintenance" name="b-maintenance" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-maintenance-help b-maintenance-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="b-maintenance-help" data-i18n="maintHelp">Фильтры, чистка, сервис — примерно. Если расходов нет, введите 0.</p>
+          <p class="error" id="b-maintenance-err" hidden></p>
+        </div>
+      </fieldset>
+
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" data-i18n="btnCalc">Рассчитать</button>
+      <button type="button" id="clear-btn" class="btn-link" data-i18n="btnReset">Очистить</button>
+    </div>
+    <p id="form-error" class="form-error" role="alert" hidden></p>
+  </form>
+
+  <section id="results" class="results" aria-labelledby="verdict" hidden>
+    <p id="shared-note" class="stale-note shared-note" data-i18n="sharedNote" hidden></p>
+    <p id="stale-note" class="stale-note" data-i18n="staleNote" hidden>Данные изменились, но не все поля заполнены верно. Ниже показан прошлый результат.</p>
+
+    <p id="case-note" class="case-note" hidden></p>
+    <h2 id="verdict" class="verdict" tabindex="-1"></h2>
+
+    <div class="totals">
+      <div class="total total-a">
+        <p class="total-name" id="r-a-name"></p>
+        <p class="total-sum" id="r-a-total"></p>
+        <dl class="breakdown">
+          <div><dt data-i18n="bdPurchase">Покупка</dt><dd id="r-a-purchase"></dd></div>
+          <div><dt data-i18n="bdEnergy">Электроэнергия</dt><dd id="r-a-energy"></dd></div>
+          <div><dt data-i18n="bdMaint">Обслуживание</dt><dd id="r-a-maint"></dd></div>
+          <div class="breakdown-annual"><dt data-i18n="bdAnnual">Расходы в год</dt><dd id="r-a-annual"></dd></div>
+        </dl>
+      </div>
+      <div class="total total-b">
+        <p class="total-name" id="r-b-name"></p>
+        <p class="total-sum" id="r-b-total"></p>
+        <dl class="breakdown">
+          <div><dt data-i18n="bdPurchase">Покупка</dt><dd id="r-b-purchase"></dd></div>
+          <div><dt data-i18n="bdEnergy">Электроэнергия</dt><dd id="r-b-energy"></dd></div>
+          <div><dt data-i18n="bdMaint">Обслуживание</dt><dd id="r-b-maint"></dd></div>
+          <div class="breakdown-annual"><dt data-i18n="bdAnnual">Расходы в год</dt><dd id="r-b-annual"></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <h3 data-i18n="stackTitle">Из чего складывается сумма</h3>
+    <div id="stack" class="stack"></div>
+    <ul class="legend" aria-hidden="true">
+      <li><span class="swatch seg-purchase"></span><span data-i18n="bdPurchase">Покупка</span></li>
+      <li><span class="swatch seg-energy"></span><span data-i18n="bdEnergy">Электроэнергия</span></li>
+      <li><span class="swatch seg-maint"></span><span data-i18n="bdMaint">Обслуживание</span></li>
+    </ul>
+
+    <h3 data-i18n="chartTitle">Накопленные расходы по годам</h3>
+    <p class="chart-intro" data-i18n="chartIntro">Линии показывают, сколько всего вы потратите к концу каждого года. Если линии пересекаются, в этой точке товары сравниваются по стоимости.</p>
+    <ul class="legend legend-lines">
+      <li><svg width="32" height="10" aria-hidden="true"><line x1="0" y1="5" x2="32" y2="5" class="line-a"/></svg><span id="legend-a"></span></li>
+      <li><svg width="32" height="10" aria-hidden="true"><line x1="0" y1="5" x2="32" y2="5" class="line-b"/></svg><span id="legend-b"></span></li>
+    </ul>
+    <div id="chart" class="chart"></div>
+
+    <details class="year-details">
+      <summary data-i18n="tableToggle">Показать таблицу по годам</summary>
+      <div class="table-scroll">
+        <table class="year-table">
+          <thead>
+            <tr><th scope="col" data-i18n="thYear">Год</th><th scope="col" id="th-a"></th><th scope="col" id="th-b"></th><th scope="col" data-i18n="thDiff">Разница (A − B)</th></tr>
+          </thead>
+          <tbody id="year-body"></tbody>
+        </table>
+      </div>
+    </details>
+
+    <h3 data-i18n="explainTitle">Почему так получилось</h3>
+    <ul id="explain" class="explain"></ul>
+
+    <p class="disclaimer" data-i18n="disclaimer">Это оценка по введённым вами данным, а не гарантия экономии.</p>
+    <div class="result-actions">
+      <button type="button" id="share-btn" class="btn-primary" data-i18n="btnShare">Поделиться результатом</button>
+      <button type="button" id="print-btn" class="btn-secondary" data-i18n="btnPrint">PDF / печать</button>
+      <button type="button" id="edit-data" class="btn-link" data-i18n="btnEdit">Изменить данные</button>
+    </div>
+    <p id="share-status" class="share-status" role="status"></p>
+    <input id="share-url" class="share-url" type="text" readonly hidden aria-label="URL">
+  </section>
+
+  <section id="analyst" class="analyst" aria-labelledby="analyst-title" hidden>
+    <div class="analyst-head">
+      <h2 id="analyst-title" data-i18n="an_title">Режим аналитика</h2>
+      <span class="badge" data-i18n="an_badge">NPV и чувствительность</span>
+    </div>
+    <p class="analyst-intro" data-i18n="an_intro"></p>
+
+    <div class="sliders">
+      <div class="slider-field">
+        <div class="slider-top">
+          <label for="growth" data-i18n="an_growth">Рост тарифа в год</label>
+          <output id="growth-out" for="growth"></output>
+        </div>
+        <input id="growth" type="range" min="0" max="30" step="0.5" value="0" aria-describedby="growth-help">
+        <p class="help" id="growth-help" data-i18n="an_growthHelp"></p>
+      </div>
+      <div class="slider-field">
+        <div class="slider-top">
+          <label for="mgrowth" data-i18n="an_mgrowth">Рост стоимости обслуживания в год</label>
+          <output id="mgrowth-out" for="mgrowth"></output>
+        </div>
+        <input id="mgrowth" type="range" min="0" max="30" step="0.5" value="0" aria-describedby="mgrowth-help">
+        <p class="help" id="mgrowth-help" data-i18n="an_mgrowthHelp"></p>
+      </div>
+      <div class="slider-field">
+        <div class="slider-top">
+          <label for="discount" data-i18n="an_discount">Ставка дисконтирования</label>
+          <output id="discount-out" for="discount"></output>
+        </div>
+        <input id="discount" type="range" min="0" max="30" step="0.5" value="0" aria-describedby="discount-help">
+        <p class="help" id="discount-help" data-i18n="an_discountHelp"></p>
+      </div>
+    </div>
+
+    <h3 data-i18n="an_buyTitle">Покупка и срок службы</h3>
+    <p class="section-hint an-hint" data-i18n="an_buyHint"></p>
+    <div class="an-prods">
+      <fieldset class="an-prod an-prod-a">
+        <legend id="an-a-legend"></legend>
+        <div class="an-row">
+          <label for="a-term" data-i18n="an_payMethod">Способ покупки</label>
+          <select id="a-term" class="an-select"></select>
+        </div>
+        <div class="an-row" id="a-rate-row" hidden>
+          <div class="slider-top">
+            <label for="a-rate" data-i18n="an_rate">Процент рассрочки в год</label>
+            <output id="a-rate-out" for="a-rate"></output>
+          </div>
+          <input id="a-rate" type="range" min="0" max="60" step="1" value="0" aria-describedby="a-rate-help a-credit-info">
+          <p class="help" id="a-rate-help" data-i18n="an_rateHelp"></p>
+          <p class="credit-info" id="a-credit-info"></p>
+        </div>
+        <div class="an-row field">
+          <label for="a-salvage" data-i18n="an_salvage">Цена перепродажи в конце срока сравнения</label>
+          <div class="input-unit">
+            <input id="a-salvage" type="text" inputmode="decimal" autocomplete="off" aria-describedby="a-salvage-help a-salvage-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="a-salvage-help" data-i18n="an_salvageHelp"></p>
+          <p class="error" id="a-salvage-err" hidden></p>
+        </div>
+        <div class="an-row">
+          <label for="a-life" data-i18n="an_life">Срок службы</label>
+          <select id="a-life" class="an-select"></select>
+        </div>
+      </fieldset>
+      <fieldset class="an-prod an-prod-b">
+        <legend id="an-b-legend"></legend>
+        <div class="an-row">
+          <label for="b-term" data-i18n="an_payMethod">Способ покупки</label>
+          <select id="b-term" class="an-select"></select>
+        </div>
+        <div class="an-row" id="b-rate-row" hidden>
+          <div class="slider-top">
+            <label for="b-rate" data-i18n="an_rate">Процент рассрочки в год</label>
+            <output id="b-rate-out" for="b-rate"></output>
+          </div>
+          <input id="b-rate" type="range" min="0" max="60" step="1" value="0" aria-describedby="b-rate-help b-credit-info">
+          <p class="help" id="b-rate-help" data-i18n="an_rateHelp"></p>
+          <p class="credit-info" id="b-credit-info"></p>
+        </div>
+        <div class="an-row field">
+          <label for="b-salvage" data-i18n="an_salvage">Цена перепродажи в конце срока сравнения</label>
+          <div class="input-unit">
+            <input id="b-salvage" type="text" inputmode="decimal" autocomplete="off" aria-describedby="b-salvage-help b-salvage-err">
+            <span class="unit" data-i18n="currency">сум</span>
+          </div>
+          <p class="help" id="b-salvage-help" data-i18n="an_salvageHelp"></p>
+          <p class="error" id="b-salvage-err" hidden></p>
+        </div>
+        <div class="an-row">
+          <label for="b-life" data-i18n="an_life">Срок службы</label>
+          <select id="b-life" class="an-select"></select>
+        </div>
+      </fieldset>
+    </div>
+
+    <p id="an-verdict" class="an-verdict" aria-live="polite"></p>
+
+    <div class="facts">
+      <div class="fact">
+        <p class="fact-label" data-i18n="an_threshold">Порог тарифа</p>
+        <p class="fact-value" id="an-thr-value"></p>
+        <p class="fact-desc" id="an-thr-desc"></p>
+      </div>
+      <div class="fact">
+        <p class="fact-label" data-i18n="an_payback">Окупаемость с учётом дисконтирования</p>
+        <p class="fact-value" id="an-pb-value"></p>
+        <p class="fact-desc" id="an-pb-desc"></p>
+      </div>
+    </div>
+
+    <h3 data-i18n="an_scenarios">Как меняется вывод</h3>
+    <div class="table-scroll">
+      <table class="year-table scen-table">
+        <thead>
+          <tr><th scope="col" data-i18n="an_thScenario">Сценарий</th><th scope="col" id="an-th-a"></th><th scope="col" id="an-th-b"></th><th scope="col" data-i18n="an_thBetter">Выгоднее</th></tr>
+        </thead>
+        <tbody id="an-scen-body"></tbody>
+      </table>
+    </div>
+
+    <h3 data-i18n="an_eacTitle">Разный срок службы: годовая эквивалентная стоимость (EAC)</h3>
+    <p class="chart-intro" data-i18n="an_eacIntro"></p>
+    <p id="eac-hint" class="eac-hint" data-i18n="an_eacHint"></p>
+    <div id="eac-result" hidden>
+      <div class="facts">
+        <div class="fact fact-a">
+          <p class="fact-label" id="eac-a-name"></p>
+          <p class="fact-value" id="eac-a-value"></p>
+          <p class="fact-desc" id="eac-a-desc"></p>
+        </div>
+        <div class="fact fact-b">
+          <p class="fact-label" id="eac-b-name"></p>
+          <p class="fact-value" id="eac-b-value"></p>
+          <p class="fact-desc" id="eac-b-desc"></p>
+        </div>
+      </div>
+      <p id="eac-verdict" class="an-verdict" aria-live="polite"></p>
+    </div>
+
+    <h3 data-i18n="an_sensTitle">Чувствительность к тарифу</h3>
+    <p class="chart-intro" data-i18n="an_sensIntro"></p>
+    <div id="sens-chart" class="chart"></div>
+
+    <details class="year-details">
+      <summary data-i18n="an_formulaToggle">Формула и допущения</summary>
+      <p class="formula formula-npv">NPV = P + Σ<sub>k=1…Y</sub> (E × R × (1 + g)<sup>k−1</sup> + M × (1 + h)<sup>k−1</sup>) / (1 + d)<sup>k</sup> − S / (1 + d)<sup>Y</sup></p>
+      <p class="formula formula-npv">PMT = P × i / (1 − (1 + i)<sup>−n</sup>), i = r / 12</p>
+      <p class="formula formula-npv">EAC = NPV<sub>L</sub> × d / (1 − (1 + d)<sup>−L</sup>)</p>
+      <p class="formula-legend" data-i18n="an_formulaNote"></p>
+    </details>
+  </section>
+
+  <section class="assumptions" id="methodology" aria-labelledby="assumptions-title">
+    <h2 id="assumptions-title" data-i18n="howTitle">Как считается результат</h2>
+    <p class="formula">TCO = P + (E × R × Y) + (M × Y)</p>
+    <p class="formula-legend" data-i18n="formulaLegend">TCO — общая стоимость владения, P — цена покупки, E — энергопотребление в год (кВт·ч), R — цена 1 кВт·ч, Y — срок в годах, M — обслуживание в год.</p>
+
+    <div class="assumptions-grid">
+      <div>
+        <h3 data-i18n="includedTitle">Что учтено</h3>
+        <ul>
+          <li data-i18n="inc1">Цена покупки.</li>
+          <li data-i18n="inc2">Электроэнергия: потребление в год × тариф × срок.</li>
+          <li data-i18n="inc3">Обслуживание: расходы в год × срок.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 data-i18n="excludedTitle">Что не учтено</h3>
+        <ul>
+          <li data-i18n="exc3">Крупные поломки и ремонт.</li>
+          <li data-i18n="exc4">Цена, за которую товар можно перепродать.</li>
+          <li data-i18n="exc6">Реальное потребление может отличаться от этикетки.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="asm-note" data-i18n="asmNote">Рост тарифов, стоимость денег во времени, рассрочку и разный срок службы можно учесть в режиме аналитика.</p>
+  </section>
+
+  <section id="about" class="about" aria-labelledby="about-title">
+    <h2 id="about-title" data-i18n="about_title">О проекте</h2>
+    <div class="about-grid">
+      <div class="about-main">
+        <h3 data-i18n="about_why_title">Зачем этот сайт</h3>
+        <p data-i18n="about_why"></p>
+        <h3 data-i18n="about_how_title">Как обеспечивается точность</h3>
+        <p data-i18n="about_how"></p>
+        <p><a href="tests.html" class="text-link" data-i18n="about_tests">Открыть тесты</a></p>
+        <h3 data-i18n="about_ai_title">Использование ИИ</h3>
+        <p data-i18n="about_ai"></p>
+      </div>
+      <aside class="author-card" aria-labelledby="author-title">
+        <h3 id="author-title" data-i18n="about_author_title">Автор</h3>
+        <div class="author-row">
+          <span class="avatar" id="author-initials" aria-hidden="true"></span>
+          <div>
+            <p class="author-name" id="author-name"></p>
+            <p class="author-role" data-i18n="about_role">Автор проекта · абитуриент, направление «Финансы»</p>
+          </div>
+        </div>
+        <p id="author-github-wrap" hidden><a id="author-github" class="text-link" href="#" data-i18n="about_github">Исходный код на GitHub</a></p>
+        <p class="author-meta"><span data-i18n="about_version">Версия</span> <span id="author-version"></span></p>
+      </aside>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p data-i18n="footer">SmartChoice Analytics — учебный проект. Все расчёты выполняются в вашем браузере, введённые данные никуда не отправляются.</p>
+    <p class="footer-meta" id="footer-meta"></p>
+  </div>
+</footer>
+
+<div id="print-report" class="print-only" aria-hidden="true"></div>
+
+<script>
+"use strict";
+
+/*
+  SmartChoice Analytics — переводы интерфейса.
+  ru — русский, uz — узбекский (латиница), en — английский.
+
+  Обычные строки подставляются в элементы страницы с атрибутом data-i18n="ключ".
+  Функции (ex.*, yearsWord и др.) собирают предложения с числами и названиями товаров.
+  Чтобы добавить язык, скопируйте блок целиком и переведите все значения.
+*/
+
+/* ====== Muallif haqida — shu yerni oʻzgartiring ======
+   name   — ismingiz va familiyangiz
+   github — loyihaning GitHub manzili (boʻsh qolsa, havola koʻrsatilmaydi)        */
+window.SC_AUTHOR = {
+  name: "Saidjon Murodov",
+  github: "https://github.com/saidjonstudy/smartchoice-ai",
+  version: "SM 1.1",
+  year: 2026
+};
+
+window.SC_I18N = {
+
+  /* ===================== Русский ===================== */
+  ru: {
+    htmlLang: "ru",
+    groupSep: "\u00A0",          // разделитель тысяч: 4 000 000
+    decimalSep: ",",              // десятичная запятая: 2,5
+    compactSep: "\u00A0",
+    compact: [[1e9, "млрд"], [1e6, "млн"], [1e3, "тыс."]],
+    currency: "сум",
+    quote: function (s) { return "«" + s + "»"; },
+    yearsWord: function (n) {
+      const forms = { one: "год", few: "года", many: "лет", other: "года" };
+      return forms[new Intl.PluralRules("ru").select(n)];
+    },
+    formErrors: function (n) {
+      return "Проверьте " + (n === 1 ? "поле с подсказкой" : "поля с подсказками") + " — их " + n + ".";
+    },
+    equalAt: function (t) { return "равны ≈ через " + t; },
+
+    title: "SmartChoice Analytics — калькулятор стоимости владения",
+    metaDesc: "Бесплатный калькулятор стоимости владения (TCO) с режимом NPV: сравните два товара по цене, электроэнергии, обслуживанию и остаточной стоимости.",
+    langNav: "Язык",
+    h1: "Дешевле в магазине — не значит дешевле за пять лет",
+    lede: "Введите цену, энергопотребление и обслуживание двух товаров. Калькулятор покажет ориентировочную общую стоимость владения за выбранный срок и объяснит, откуда берётся разница.",
+    condTitle: "Общие условия",
+    condHint: "Одинаковы для обоих товаров.",
+    tariffLabel: "Цена 1 кВт·ч электроэнергии",
+    tariffHelp: "Указана в квитанции за свет.",
+    yearsLabel: "Срок сравнения",
+    yearsHelp: "Сколько лет вы планируете пользоваться товаром, от 1 до 30.",
+    unitYears: "лет",
+    unitKwh: "кВт·ч",
+    productA: "Товар A",
+    productB: "Товар B",
+    nameLabel: "Название",
+    optional: "(необязательно)",
+    namePhA: "Например, холодильник Samsung",
+    namePhB: "Например, холодильник LG",
+    priceLabel: "Цена покупки",
+    priceHelp: "Цена в магазине.",
+    energyLabel: "Энергопотребление в год",
+    energyHelp: "Указано на энергетической этикетке. Если товар не работает от электричества, введите 0.",
+    maintLabel: "Обслуживание в год",
+    maintHelp: "Фильтры, чистка, сервис — примерно. Если расходов нет, введите 0.",
+    btnCalc: "Рассчитать",
+    btnReset: "Очистить",
+    exampleNote: "Готовые примеры учебные: это округлённые ориентиры, а не данные конкретных моделей. Перед решением подставьте реальные цены и тариф.",
+    staleNote: "Данные изменились, но не все поля заполнены верно. Ниже показан прошлый результат.",
+    bdPurchase: "Покупка",
+    bdEnergy: "Электроэнергия",
+    bdMaint: "Обслуживание",
+    bdAnnual: "Расходы в год",
+    stackTitle: "Из чего складывается сумма",
+    chartTitle: "Накопленные расходы по годам",
+    chartIntro: "Линии показывают, сколько всего вы потратите к концу каждого года. Если линии пересекаются, в этой точке товары сравниваются по стоимости.",
+    axisYears: "годы",
+    tableToggle: "Показать таблицу по годам",
+    thYear: "Год",
+    thDiff: "Разница (A − B)",
+    year0: "0 (покупка)",
+    explainTitle: "Почему так получилось",
+    disclaimer: "Это оценка по введённым вами данным, а не гарантия экономии.",
+    btnEdit: "Изменить данные",
+    howTitle: "Как считается результат",
+    formulaLegend: "TCO — общая стоимость владения, P — цена покупки, E — энергопотребление в год (кВт·ч), R — цена 1 кВт·ч, Y — срок в годах, M — обслуживание в год.",
+    includedTitle: "Что учтено",
+    inc1: "Цена покупки.",
+    inc2: "Электроэнергия: потребление в год × тариф × срок.",
+    inc3: "Обслуживание: расходы в год × срок.",
+    excludedTitle: "Что не учтено",
+    exc3: "Крупные поломки и ремонт.",
+    exc4: "Цена, за которую товар можно перепродать.",
+    exc6: "Реальное потребление может отличаться от этикетки.",
+    asmNote: "Рост тарифов и стоимости обслуживания, стоимость денег во времени, рассрочку, цену перепродажи и разный срок службы можно учесть в режиме аналитика.",
+    footer: "SmartChoice Analytics — учебный проект. Все расчёты выполняются в вашем браузере, введённые данные никуда не отправляются.",
+
+    err_price_empty: "Введите цену покупки.",
+    err_energy_empty: "Введите энергопотребление в год. Если товар не работает от электричества, введите 0.",
+    err_maint_empty: "Введите расходы на обслуживание в год. Если их нет, введите 0.",
+    err_tariff_empty: "Введите цену 1 кВт·ч.",
+    err_years_empty: "Введите срок сравнения в годах.",
+    err_nan: "Введите число цифрами, например 4 000 000.",
+    err_nan_years: "Введите число цифрами, например 5.",
+    err_negative: "Значение не может быть отрицательным.",
+    err_years_range: "Введите целое число лет от 1 до 30.",
+    err_price_zero: "Цена должна быть больше нуля.",
+    err_price_big: "Слишком большая цена — проверьте, нет ли лишних нулей.",
+    err_energy_big: "Больше 20 000 кВт·ч в год — это потребление целого дома. Проверьте значение на этикетке.",
+    err_maint_big: "Слишком большая сумма — проверьте, нет ли лишних нулей.",
+    err_tariff_big: "Слишком высокий тариф — проверьте значение в квитанции.",
+
+    navLabel: "Разделы сайта",
+    nav_calc: "Калькулятор",
+    nav_results: "Результат",
+    nav_method: "Методология",
+    nav_about: "О проекте",
+    stepsLabel: "Как это работает",
+    step1: "Укажите тариф и срок",
+    step2: "Введите данные двух товаров",
+    step3: "Сравните результат и проверьте допущения",
+    btnShare: "Поделиться результатом",
+    btnPrint: "PDF / печать",
+    shareCopied: "Ссылка скопирована — отправьте её в Telegram или по почте.",
+    shareManual: "Скопируйте ссылку:",
+    shareText: "Сравнение стоимости владения — SmartChoice Analytics",
+    sharedNote: "Вы открыли сравнение по ссылке. Данные можно изменить.",
+    printSummary: "Исходные данные",
+    printDate: "Дата расчёта",
+    about_title: "О проекте",
+    about_why_title: "Зачем этот сайт",
+    about_why: "Покупая технику, большинство людей сравнивают только цену на ценнике. Но холодильник, кондиционер или стиральная машина работают годами, и расходы на электричество и обслуживание могут превысить разницу в цене. SmartChoice Analytics помогает увидеть полную стоимость покупки до того, как деньги потрачены.",
+    about_how_title: "Как обеспечивается точность",
+    about_how: "Все формулы открыты и описаны в разделе «Методология». Расчёты проверяются автоматическими тестами — от формулы стоимости владения до NPV, аннуитета и EAC. Сайт работает без регистрации, а введённые данные не покидают ваш браузер.",
+    about_tests: "Открыть тесты",
+    about_ai_title: "Использование ИИ",
+    about_ai: "Идея, концепция и решения о том, что включить в финансовую модель, принадлежат автору. Код сайта написан с помощью ИИ-ассистента Claude (Anthropic) по этой концепции. Сам калькулятор не использует нейросети и машинное обучение: все результаты — это открытые финансовые формулы.",
+    about_author_title: "Автор",
+    about_role: "Автор проекта · абитуриент, направление «Финансы»",
+    about_github: "Исходный код на GitHub",
+    about_version: "Версия",
+    an_title: "Режим аналитика",
+    an_badge: "NPV и чувствительность",
+    an_intro: "Базовая модель считает, что тариф и обслуживание не дорожают, деньги через пять лет стоят столько же, сколько сегодня, а в конце срока товар ничего не стоит. Здесь можно учесть рост тарифа и стоимости обслуживания, стоимость денег во времени и цену перепродажи — так считают в корпоративных финансах.",
+    an_growth: "Рост тарифа в год",
+    an_growthHelp: "На сколько процентов в среднем дорожает 1 кВт·ч за год.",
+    an_discount: "Ставка дисконтирования",
+    an_discountHelp: "Сколько приносили бы деньги за год, если бы лежали в банке, — например, ставка по вкладу.",
+    an_threshold: "Порог тарифа",
+    an_payback: "Окупаемость с учётом дисконтирования",
+    an_scenarios: "Как меняется вывод",
+    an_thScenario: "Сценарий",
+    an_thBetter: "Выгоднее",
+    an_sensTitle: "Чувствительность к тарифу",
+    an_sensIntro: "Линия показывает, насколько товар A выгоднее товара B при разной цене 1 кВт·ч, в сегодняшних деньгах. Выше нуля выгоднее A, ниже — B.",
+    an_formulaToggle: "Формула и допущения",
+    an_formulaNote: "g — рост тарифа в год, h — рост стоимости обслуживания в год, d — ставка дисконтирования, k — номер года, S — цена перепродажи в конце срока сравнения Y (в формуле дисконтируется множителем (1 + d)^−Y). P — цена покупки в сегодняшних деньгах: при покупке сразу это сама цена, при рассрочке — приведённая стоимость ежемесячных платежей PMT (r — процент в год, n — число месяцев). Расходы на электроэнергию и обслуживание считаются оплаченными в конце каждого года; в первый год цены равны сегодняшним. EAC предполагает, что после окончания срока службы L товар заменяется таким же; цена перепродажи в EAC не учитывается, потому что товар используется до конца срока службы. Окупаемость считается без перепродажи: цена перепродажи известна только на конец срока. При g = 0, h = 0, d = 0, S = 0 и без рассрочки формула совпадает с базовой.",
+    an_markCurrent: "ваш тариф",
+    an_markThreshold: "порог",
+    an_almostEqual: "почти равны",
+    an_buyTitle: "Покупка, перепродажа и срок службы",
+    an_buyHint: "Отдельно для каждого товара. Все поля необязательны.",
+    an_payMethod: "Способ покупки",
+    an_cash: "Сразу, без рассрочки",
+    an_rate: "Процент рассрочки в год",
+    an_rateHelp: "Если рассрочка без процентов, оставьте 0 %.",
+    an_life: "Срок службы",
+    an_lifeNone: "Не указан",
+    an_eacTitle: "Разный срок службы: годовая эквивалентная стоимость (EAC)",
+    an_eacIntro: "Если товары служат разное время, сравнивать общую сумму за один срок нечестно: недолговечный товар придётся менять раньше. EAC переводит все расходы товара за его срок службы в одинаковую сумму в год — так в корпоративных финансах сравнивают оборудование с разным сроком службы. Цена перепродажи здесь не учитывается: товар используется до конца срока службы.",
+    an_eacHint: "Чтобы увидеть сравнение, выберите срок службы для обоих товаров выше.",
+
+    an_mgrowth: "Рост стоимости обслуживания в год",
+    an_mgrowthHelp: "На сколько процентов в среднем дорожают сервис и ремонт за год. Первый год считается по сегодняшней цене.",
+    an_salvage: "Цена перепродажи в конце срока сравнения",
+    an_salvageHelp: "Сколько вы получите, продав товар в конце срока сравнения. Если продавать не планируете, оставьте поле пустым.",
+    err_salvage_big: "Цена перепродажи не может быть больше цены покупки.",
+    presetsTitle: "Быстрый старт: готовые примеры",
+    presetsHint: "Выберите жизненную ситуацию — поля заполнятся сами, а расчёт запустится сразу.",
+    presetCase: "Пример",
+    pr_title: "Отчёт: общая стоимость владения",
+    pr_conclusion: "Финансовый вывод",
+    pr_summary: "Сводка расчёта",
+    pr_metrics: "Ключевые показатели",
+    pr_yearsTable: "Таблица по годам",
+    pr_results: "Результат за срок",
+    pr_tco: "Общая стоимость владения (TCO)",
+    pr_npv: "В сегодняшних деньгах (NPV)",
+    pr_resale: "Цена перепродажи",
+    pr_breakeven: "Точка равенства расходов",
+    pr_formula: "Формулы",
+    pr_eac: "Годовая эквивалентная стоимость (EAC)",
+    pr_period: "Срок",
+    pr_npvTitle: "Режим аналитика: NPV, рост цен, перепродажа",
+    pr_assump: "Допущения",
+    pr_none: "нет",
+
+    printHelp: "Если окно печати не открылось, откройте сайт в обычном браузере (Chrome, Safari, Firefox), а не во встроенном браузере Telegram или в предпросмотре файла, и нажмите кнопку снова. Можно также нажать Ctrl+P (на Mac — Cmd+P).",
+    presets: {
+      ac: { label: "Обычный и инверторный кондиционер", meta: "12 BTU · 7 лет", nameA: "Обычный кондиционер", nameB: "Инверторный кондиционер",
+        note: "Кондиционер 12 BTU в жилой комнате, около 1 000 часов работы в год. Цены — округлённые ориентиры по онлайн-объявлениям (≈3,0 и ≈4,3 млн сум). Тариф 900 сум — ступень 201–500 кВт·ч в месяц. Рост тарифа 10 % в год (верхняя граница ежегодной индексации для населения), обслуживания 8 %, дисконт 15 %; цена перепродажи указана через 7 лет." },
+      car: { label: "Бензиновый автомобиль и электромобиль", meta: "5 лет · 15 000 км в год", nameA: "Бензиновый автомобиль", nameB: "Электромобиль",
+        note: "Пробег 15 000 км в год. У бензинового автомобиля топливо (≈7,5 л на 100 км по ≈12 000 сум за литр) и техобслуживание внесены в графу «Обслуживание в год», а энергопотребление равно 0. Электромобиль заряжается дома: ≈15 кВт·ч на 100 км, тариф 1 100 сум (ступень 501–1000 кВт·ч в месяц). Цены — округлённые ориентиры. Цена перепродажи через 5 лет — около 60 % и 42 % от цены покупки." },
+      fridge: { label: "Холодильник класса A и A+++", meta: "10 лет · около 300 л", nameA: "Холодильник класса A", nameB: "Холодильник класса A+++",
+        note: "Холодильник около 300 л: класс A (≈360 кВт·ч в год) против A+++ (≈170 кВт·ч в год). Цены условные. Тариф 900 сум, рост 10 % в год. Откройте режим аналитика и посмотрите «Порог тарифа»: при какой цене кВт·ч дорогой холодильник начинает окупаться." },
+      led: { label: "Лампы накаливания и LED", meta: "5 лет · 10 ламп", nameA: "Лампы накаливания 60 Вт", nameB: "LED-лампы 9 Вт",
+        note: "10 ламп по 4 часа в день: лампы накаливания 60 Вт против LED 9 Вт. В графу «Обслуживание в год» внесена замена перегоревших ламп накаливания. Цены условные." },
+    },
+
+    anx: {
+      percent: function (n) { return n + "\u00A0%"; },
+      noChange: function () { return "Сдвиньте ползунки или укажите цену перепродажи, чтобы учесть рост тарифа и обслуживания, стоимость денег во времени и перепродажу. Пока расчёт совпадает с базовой моделью."; },
+      cond: function (g, d, o) {
+        const p = ["роста тарифа на " + g + " в год"];
+        if (o && o.mg) p.push("роста обслуживания на " + o.mg + " в год");
+        p.push("ставки " + d);
+        if (o && o.credit) p.push("рассрочки");
+        if (o && o.salvage) p.push("цены перепродажи");
+        return p.length === 1 ? p[0] : p.slice(0, -1).join(", ") + " и " + p[p.length - 1];
+      },
+      same: function (cond, name, sum) { return "С учётом " + cond + " вывод не меняется: " + name + " выгоднее примерно на " + sum + " в сегодняшних деньгах."; },
+      changed: function (cond, name, sum) { return "С учётом " + cond + " вывод меняется: теперь выгоднее " + name + " — примерно на " + sum + " в сегодняшних деньгах."; },
+      equal: function (cond) { return "С учётом " + cond + " варианты почти равны."; },
+      scenBase: function () { return "Базовая модель"; },
+      scenCredit: function () { return "+ рассрочка"; },
+      scenGrowth: function (g) { return "+ рост тарифа " + g; },
+      scenNPV: function (d) { return "+ дисконт " + d + " (NPV)"; },
+      scenMaint: function (h) { return "+ рост обслуживания " + h; },
+      scenSalvage: function () { return "+ перепродажа"; },
+      months: function (n) { return "Рассрочка на " + n + " мес."; },
+      creditInfo: function (pmt, over) { return "Платёж в месяц: " + pmt + ", переплата: " + over + "."; },
+      eacValue: function (sum) { return sum + " в год"; },
+      eacDesc: function (life) { return "Срок службы: " + life + "."; },
+      eacVerdict: function (name, sum) { return "Если считать каждый товар за его собственный срок службы, " + name + " дешевле примерно на " + sum + " в год."; },
+      eacEqual: function () { return "Если считать каждый товар за его собственный срок службы, их годовые расходы почти равны."; },
+      thresholdValue: function (sum) { return sum + " за кВт·ч"; },
+      thresholdDesc: function (saver, other) { return "Если 1 кВт·ч стоит дороже, выгоднее " + saver + ", если дешевле — " + other + "."; },
+      thresholdNone: function () { return "Тариф не влияет на вывод: энергопотребление у товаров одинаковое."; },
+      thresholdAlways: function (name) { return "При любом тарифе выгоднее " + name + "."; },
+      paybackDesc: function () { return "Через столько лет более экономичный товар возвращает переплату при покупке — с учётом роста тарифа и ставки."; },
+      paybackNotNeeded: function (name) { return "Не требуется: " + name + " дешевле и при покупке, и в использовании."; },
+      paybackSamePrice: function () { return "Не требуется: цена покупки одинаковая."; },
+      paybackNever: function () { return "Переплата не окупается за 30 лет."; },
+      axisTariff: function (cur) { return "тариф, " + cur + "/кВт·ч"; },
+      regionBetter: function (name) { return "выгоднее " + name; }
+    },
+
+    ex: {
+      headlineEqual: function (period, sum) {
+        return "При заданных условиях за " + period + " оба товара обойдутся одинаково — примерно " + sum + ".";
+      },
+      headlineDiff: function (period, cheaper, diff, other) {
+        return "При заданных условиях за " + period + " " + cheaper + " обойдётся примерно на " + diff + " дешевле, чем " + other + ".";
+      },
+      labelPurchase: function () { return "цене покупки"; },
+      labelEnergy: function (period) { return "расходах на электроэнергию за " + period; },
+      labelMaint: function (period) { return "расходах на обслуживание за " + period; },
+      topFactor: function (label, sum) { return "Больше всего на результат повлияла разница в " + label + ": " + sum + "."; },
+      sameBoth: function () { return "Цена покупки и ежегодные расходы у товаров совпадают."; },
+      samePrice: function (name, sum) {
+        return "Цена покупки одинаковая, поэтому всё решают ежегодные расходы: у " + name + " они ниже на " + sum + " в год.";
+      },
+      sameAnnual: function () { return "Ежегодные расходы одинаковые, поэтому разница возникает только из-за цены покупки."; },
+      bothCheaper: function (name) {
+        return name + " дешевле и при покупке, и в ежегодных расходах, поэтому остаётся выгоднее при любом сроке использования.";
+      },
+      tradeoff: function (buy, dP, dA, t) {
+        return buy + " дешевле при покупке на " + dP + ", но каждый год обходится дороже на " + dA +
+          " (электроэнергия и обслуживание). Общие расходы сравниваются примерно через " + t + ".";
+      },
+      tradeoffAfter: function (period, name) { return " Поэтому за " + period + " выгоднее " + name + "."; },
+      tradeoffBefore: function (period, buy, annual) {
+        return " За " + period + " " + buy + " ещё выгоднее, но при более долгом использовании преимущество перейдёт к " + annual + ".";
+      },
+      smallDiff: function () {
+        return "Разница меньше 3% от общей суммы. Небольшая неточность во введённых данных может изменить вывод, поэтому варианты можно считать почти равными.";
+      }
+    }
+  },
+
+  /* ===================== Oʻzbekcha (lotin) ===================== */
+  uz: {
+    htmlLang: "uz",
+    groupSep: "\u00A0",
+    decimalSep: ",",
+    compactSep: "\u00A0",
+    compact: [[1e9, "mlrd"], [1e6, "mln"], [1e3, "ming"]],
+    currency: "soʻm",
+    quote: function (s) { return "“" + s + "”"; },
+    yearsWord: function () { return "yil"; },
+    formErrors: function (n) { return "Koʻrsatmali maydonlarni tekshiring: " + n + " ta."; },
+    equalAt: function (t) { return "teng ≈ " + t + "dan keyin"; },
+
+    title: "SmartChoice Analytics — egalik qiymati kalkulyatori",
+    metaDesc: "Egalik qiymati (TCO) kalkulyatori NPV rejimi bilan: ikki mahsulotni narx, elektr energiyasi, xizmat koʻrsatish va qoldiq qiymat boʻyicha taqqoslang.",
+    langNav: "Til",
+    h1: "Doʻkonda arzon — besh yilda ham arzon degani emas",
+    lede: "Ikki mahsulotning narxi, elektr isteʼmoli va xizmat koʻrsatish xarajatlarini kiriting. Kalkulyator tanlangan muddat uchun taxminiy umumiy egalik qiymatini koʻrsatadi va farq qayerdan kelib chiqishini tushuntiradi.",
+    condTitle: "Umumiy shartlar",
+    condHint: "Ikkala mahsulot uchun bir xil.",
+    tariffLabel: "1 kVt·soat elektr energiyasi narxi",
+    tariffHelp: "Elektr uchun toʻlov kvitansiyasida koʻrsatilgan.",
+    yearsLabel: "Taqqoslash muddati",
+    yearsHelp: "Mahsulotdan necha yil foydalanishni rejalashtiryapsiz, 1 dan 30 gacha.",
+    unitYears: "yil",
+    unitKwh: "kVt·soat",
+    productA: "Mahsulot A",
+    productB: "Mahsulot B",
+    nameLabel: "Nomi",
+    optional: "(ixtiyoriy)",
+    namePhA: "Masalan, Samsung muzlatkichi",
+    namePhB: "Masalan, LG muzlatkichi",
+    priceLabel: "Xarid narxi",
+    priceHelp: "Doʻkondagi narx.",
+    energyLabel: "Yillik elektr isteʼmoli",
+    energyHelp: "Energiya samaradorligi yorligʻida koʻrsatilgan. Agar mahsulot elektr bilan ishlamasa, 0 kiriting.",
+    maintLabel: "Yillik xizmat koʻrsatish",
+    maintHelp: "Filtrlar, tozalash, servis — taxminan. Xarajat boʻlmasa, 0 kiriting.",
+    btnCalc: "Hisoblash",
+    btnReset: "Tozalash",
+    exampleNote: "Tayyor namunalar oʻquv maqsadida: bu yaxlitlangan yoʻnaltiruvchi qiymatlar, aniq modellar maʼlumoti emas. Qaror qilishdan oldin haqiqiy narx va tarifni kiriting.",
+    staleNote: "Maʼlumotlar oʻzgardi, lekin hamma maydonlar toʻgʻri toʻldirilmagan. Quyida avvalgi natija koʻrsatilgan.",
+    bdPurchase: "Xarid",
+    bdEnergy: "Elektr energiyasi",
+    bdMaint: "Xizmat koʻrsatish",
+    bdAnnual: "Yillik xarajat",
+    stackTitle: "Summa nimalardan iborat",
+    chartTitle: "Yillar boʻyicha jamlangan xarajatlar",
+    chartIntro: "Chiziqlar har yil oxirigacha jami qancha sarflashingizni koʻrsatadi. Chiziqlar kesishsa, shu nuqtada mahsulotlar qiymati tenglashadi.",
+    axisYears: "yillar",
+    tableToggle: "Yillar boʻyicha jadvalni koʻrsatish",
+    thYear: "Yil",
+    thDiff: "Farq (A − B)",
+    year0: "0 (xarid)",
+    explainTitle: "Nega shunday chiqdi",
+    disclaimer: "Bu siz kiritgan maʼlumotlarga asoslangan taxminiy hisob, tejash kafolati emas.",
+    btnEdit: "Maʼlumotlarni oʻzgartirish",
+    howTitle: "Natija qanday hisoblanadi",
+    formulaLegend: "TCO — umumiy egalik qiymati, P — xarid narxi, E — yillik elektr isteʼmoli (kVt·soat), R — 1 kVt·soat narxi, Y — muddat (yil), M — yillik xizmat koʻrsatish.",
+    includedTitle: "Nimalar hisobga olingan",
+    inc1: "Xarid narxi.",
+    inc2: "Elektr energiyasi: yillik isteʼmol × tarif × muddat.",
+    inc3: "Xizmat koʻrsatish: yillik xarajat × muddat.",
+    excludedTitle: "Nimalar hisobga olinmagan",
+    exc3: "Jiddiy buzilishlar va taʼmirlash.",
+    exc4: "Mahsulotni qayta sotish mumkin boʻlgan narx.",
+    exc6: "Haqiqiy isteʼmol yorliqdagidan farq qilishi mumkin.",
+    asmNote: "Tarif va xizmat narxining oshishi, pulning vaqt qiymati, muddatli toʻlov, qayta sotish narxi va turli xizmat muddatini tahlilchi rejimida hisobga olish mumkin.",
+    footer: "SmartChoice Analytics — oʻquv loyihasi. Barcha hisob-kitoblar brauzeringizda bajariladi, kiritilgan maʼlumotlar hech qayerga yuborilmaydi.",
+
+    err_price_empty: "Xarid narxini kiriting.",
+    err_energy_empty: "Yillik elektr isteʼmolini kiriting. Agar mahsulot elektr bilan ishlamasa, 0 kiriting.",
+    err_maint_empty: "Yillik xizmat koʻrsatish xarajatini kiriting. Xarajat boʻlmasa, 0 kiriting.",
+    err_tariff_empty: "1 kVt·soat narxini kiriting.",
+    err_years_empty: "Taqqoslash muddatini yillarda kiriting.",
+    err_nan: "Sonni raqamlar bilan kiriting, masalan 4 000 000.",
+    err_nan_years: "Sonni raqamlar bilan kiriting, masalan 5.",
+    err_negative: "Qiymat manfiy boʻlishi mumkin emas.",
+    err_years_range: "1 dan 30 gacha butun son kiriting.",
+    err_price_zero: "Narx noldan katta boʻlishi kerak.",
+    err_price_big: "Narx juda katta — ortiqcha nollar yoʻqligini tekshiring.",
+    err_energy_big: "Yiliga 20 000 kVt·soatdan koʻp — bu butun uyning isteʼmoli. Yorliqdagi qiymatni tekshiring.",
+    err_maint_big: "Summa juda katta — ortiqcha nollar yoʻqligini tekshiring.",
+    err_tariff_big: "Tarif juda yuqori — kvitansiyadagi qiymatni tekshiring.",
+
+    navLabel: "Sayt boʻlimlari",
+    nav_calc: "Kalkulyator",
+    nav_results: "Natija",
+    nav_method: "Metodologiya",
+    nav_about: "Loyiha haqida",
+    stepsLabel: "Qanday ishlaydi",
+    step1: "Tarif va muddatni kiriting",
+    step2: "Ikki mahsulot maʼlumotlarini kiriting",
+    step3: "Natijani solishtiring va farazlarni tekshiring",
+    btnShare: "Natijani ulashish",
+    btnPrint: "PDF / chop etish",
+    shareCopied: "Havola nusxalandi — uni Telegram yoki pochta orqali yuboring.",
+    shareManual: "Havolani nusxalang:",
+    shareText: "Egalik qiymatini taqqoslash — SmartChoice Analytics",
+    sharedNote: "Siz taqqoslashni havola orqali ochdingiz. Maʼlumotlarni oʻzgartirish mumkin.",
+    printSummary: "Kiritilgan maʼlumotlar",
+    printDate: "Hisob sanasi",
+    about_title: "Loyiha haqida",
+    about_why_title: "Bu sayt nima uchun",
+    about_why: "Texnika sotib olayotganda koʻpchilik faqat yorliqdagi narxni solishtiradi. Lekin muzlatkich, konditsioner yoki kir yuvish mashinasi yillar davomida ishlaydi va elektr hamda xizmat koʻrsatish xarajatlari narxdagi farqdan oshib ketishi mumkin. SmartChoice Analytics pul sarflanmasdan oldin xaridning toʻliq qiymatini koʻrishga yordam beradi.",
+    about_how_title: "Aniqlik qanday taʼminlanadi",
+    about_how: "Barcha formulalar ochiq va “Metodologiya” boʻlimida tushuntirilgan. Hisob-kitoblar avtomatik testlar bilan tekshiriladi — egalik qiymati formulasidan NPV, annuitet va EAC gacha. Sayt roʻyxatdan oʻtishsiz ishlaydi, kiritilgan maʼlumotlar brauzeringizdan chiqmaydi.",
+    about_tests: "Testlarni ochish",
+    about_ai_title: "Sunʼiy intellektdan foydalanish",
+    about_ai: "Gʻoya, konsepsiya va moliyaviy modelga nimalarni kiritish haqidagi qarorlar muallifga tegishli. Sayt kodi ushbu konsepsiya asosida Claude (Anthropic) sunʼiy intellekt yordamchisi yordamida yozilgan. Kalkulyatorning oʻzi neyron tarmoq va mashinaviy oʻqitishdan foydalanmaydi: barcha natijalar ochiq moliyaviy formulalar asosida hisoblanadi.",
+    about_author_title: "Muallif",
+    about_role: "Loyiha muallifi · “Moliya” yoʻnalishi abituriyenti",
+    about_github: "GitHubdagi manba kodi",
+    about_version: "Versiya",
+    an_title: "Tahlilchi rejimi",
+    an_badge: "NPV va sezgirlik",
+    an_intro: "Asosiy model tarif va xizmat narxi oshmaydi, besh yildan keyingi pul bugungi bilan bir xil turadi va muddat oxirida mahsulot hech narsa turmaydi deb hisoblaydi. Bu yerda tarif va xizmat narxining oshishini, pulning vaqt qiymatini va qayta sotish narxini hisobga olish mumkin — korporativ moliyada aynan shunday hisoblanadi.",
+    an_growth: "Tarifning yillik oʻsishi",
+    an_growthHelp: "1 kVt·soat narxi bir yilda oʻrtacha necha foizga oshadi.",
+    an_discount: "Diskont stavkasi",
+    an_discountHelp: "Pul bankda tursa, bir yilda qancha daromad keltirardi — masalan, omonat foizi.",
+    an_threshold: "Tarif chegarasi",
+    an_payback: "Diskontlangan qoplanish muddati",
+    an_scenarios: "Xulosa qanday oʻzgaradi",
+    an_thScenario: "Ssenariy",
+    an_thBetter: "Foydaliroq",
+    an_sensTitle: "Tarifga sezgirlik",
+    an_sensIntro: "Chiziq 1 kVt·soatning turli narxlarida A mahsulot B mahsulotdan qanchalik foydaliroq ekanini bugungi pulda koʻrsatadi. Noldan yuqorida A foydaliroq, pastda — B.",
+    an_formulaToggle: "Formula va farazlar",
+    an_formulaNote: "g — tarifning yillik oʻsishi, h — xizmat narxining yillik oʻsishi, d — diskont stavkasi, k — yil raqami, S — taqqoslash muddati Y oxiridagi qayta sotish narxi (formulada (1 + d)^−Y koʻpaytuvchisi bilan diskontlanadi). P — bugungi pulda xarid narxi: bir yoʻla sotib olishda narxning oʻzi, muddatli toʻlovda esa oylik PMT toʻlovlarining keltirilgan qiymati (r — yillik foiz, n — oylar soni). Elektr va xizmat koʻrsatish xarajatlari har yil oxirida toʻlanadi deb hisoblanadi; birinchi yilda narxlar bugungi narxga teng. EAC xizmat muddati L tugagach mahsulot xuddi shunday mahsulotga almashtiriladi deb hisoblaydi; EACda qayta sotish narxi hisobga olinmaydi, chunki mahsulot xizmat muddati oxirigacha foydalaniladi. Qoplanish muddati qayta sotishsiz hisoblanadi: qayta sotish narxi faqat muddat oxiri uchun maʼlum. g = 0, h = 0, d = 0, S = 0 va muddatli toʻlovsiz formula asosiy formula bilan bir xil.",
+    an_markCurrent: "sizning tarifingiz",
+    an_markThreshold: "chegara",
+    an_almostEqual: "deyarli teng",
+    an_buyTitle: "Xarid, qayta sotish va xizmat muddati",
+    an_buyHint: "Har bir mahsulot uchun alohida. Barcha maydonlar majburiy emas.",
+    an_payMethod: "Xarid usuli",
+    an_cash: "Darhol, muddatli toʻlovsiz",
+    an_rate: "Muddatli toʻlovning yillik foizi",
+    an_rateHelp: "Muddatli toʻlov foizsiz boʻlsa, 0 % qoldiring.",
+    an_life: "Xizmat muddati",
+    an_lifeNone: "Koʻrsatilmagan",
+    an_eacTitle: "Turli xizmat muddati: yillik ekvivalent xarajat (EAC)",
+    an_eacIntro: "Mahsulotlar turli muddat xizmat qilsa, umumiy summani bitta muddat uchun solishtirish adolatli emas: qisqa muddatli mahsulotni ertaroq almashtirishga toʻgʻri keladi. EAC mahsulotning butun xizmat muddatidagi xarajatlarini har yili teng summaga aylantiradi — korporativ moliyada turli xizmat muddatiga ega uskunalar shunday solishtiriladi. Bu yerda qayta sotish narxi hisobga olinmaydi: mahsulot xizmat muddati oxirigacha foydalaniladi.",
+    an_eacHint: "Taqqoslashni koʻrish uchun yuqorida ikkala mahsulotning xizmat muddatini tanlang.",
+
+    an_mgrowth: "Xizmat narxining yillik oʻsishi",
+    an_mgrowthHelp: "Servis va taʼmirlash narxi bir yilda oʻrtacha necha foizga oshadi. Birinchi yil bugungi narx boʻyicha hisoblanadi.",
+    an_salvage: "Taqqoslash muddati oxiridagi qayta sotish narxi",
+    an_salvageHelp: "Taqqoslash muddati oxirida mahsulotni sotsangiz, qancha olasiz. Sotishni rejalashtirmasangiz, maydonni boʻsh qoldiring.",
+    err_salvage_big: "Qayta sotish narxi xarid narxidan katta boʻlishi mumkin emas.",
+    presetsTitle: "Tez boshlash: tayyor namunalar",
+    presetsHint: "Hayotiy vaziyatni tanlang — maydonlar oʻzi toʻldiriladi va hisob darhol bajariladi.",
+    presetCase: "Namuna",
+    pr_title: "Hisobot: umumiy egalik qiymati",
+    pr_conclusion: "Moliyaviy xulosa",
+    pr_summary: "Hisob-kitob xulosasi",
+    pr_metrics: "Asosiy koʻrsatkichlar",
+    pr_yearsTable: "Yillar boʻyicha jadval",
+    pr_results: "Muddat uchun natija",
+    pr_tco: "Umumiy egalik qiymati (TCO)",
+    pr_npv: "Bugungi pulda (NPV)",
+    pr_resale: "Qayta sotish narxi",
+    pr_breakeven: "Xarajatlar tenglashadigan nuqta",
+    pr_formula: "Formulalar",
+    pr_eac: "Yillik ekvivalent qiymat (EAC)",
+    pr_period: "Muddat",
+    pr_npvTitle: "Tahlilchi rejimi: NPV, narx oʻsishi, qayta sotish",
+    pr_assump: "Taxminlar",
+    pr_none: "yoʻq",
+
+    printHelp: "Chop etish oynasi ochilmasa, saytni oddiy brauzerda (Chrome, Safari, Firefox) oching — Telegram ichidagi brauzerda yoki fayl koʻrinishi oynasida emas — va tugmani qayta bosing. Ctrl+P (Mac’da Cmd+P) ham ishlaydi.",
+    presets: {
+      ac: { label: "Oddiy va invertorli konditsioner", meta: "12 BTU · 7 yil", nameA: "Oddiy konditsioner", nameB: "Invertorli konditsioner",
+        note: "Yashash xonasidagi 12 BTU konditsioner, yiliga taxminan 1 000 soat ishlaydi. Narxlar — onlayn eʼlonlar boʻyicha yaxlitlangan yoʻnaltiruvchi qiymatlar (≈3,0 va ≈4,3 mln soʻm). Tarif 900 soʻm — oyiga 201–500 kVt·soat bosqichi. Tarif oʻsishi yiliga 10 % (aholi uchun yillik indeksatsiyaning yuqori chegarasi), xizmat narxi 8 %, diskont 15 %; qayta sotish narxi 7 yildan keyin uchun koʻrsatilgan." },
+      car: { label: "Benzinli avtomobil va elektromobil", meta: "5 yil · yiliga 15 000 km", nameA: "Benzinli avtomobil", nameB: "Elektromobil",
+        note: "Yillik yurish 15 000 km. Benzinli avtomobilda yoqilgʻi (100 km ga ≈7,5 l, litriga ≈12 000 soʻmdan) va texnik xizmat «Yillik xizmat koʻrsatish» maydoniga kiritilgan, energiya sarfi esa 0. Elektromobil uyda zaryadlanadi: 100 km ga ≈15 kVt·soat, tarif 1 100 soʻm (oyiga 501–1000 kVt·soat bosqichi). Narxlar yaxlitlangan yoʻnaltiruvchi qiymatlar. 5 yildan keyingi qayta sotish narxi xarid narxining taxminan 60 % va 42 % ini tashkil etadi." },
+      fridge: { label: "Muzlatkich A va A+++", meta: "10 yil · taxminan 300 l", nameA: "A sinfidagi muzlatkich", nameB: "A+++ sinfidagi muzlatkich",
+        note: "Taxminan 300 l muzlatkich: A sinfi (yiliga ≈360 kVt·soat) va A+++ (yiliga ≈170 kVt·soat). Narxlar shartli. Tarif 900 soʻm, yiliga 10 % oʻsish. Tahlilchi rejimini ochib, “Tarif chegarasi”ni koʻring: kVt·soat qanday narxda qimmat muzlatkich oʻzini oqlay boshlaydi." },
+      led: { label: "Choʻgʻlanma lampa va LED", meta: "5 yil · 10 ta lampa", nameA: "Choʻgʻlanma lampalar 60 Vt", nameB: "LED lampalar 9 Vt",
+        note: "10 ta lampa, kuniga 4 soat: choʻgʻlanma lampa 60 Vt va LED 9 Vt. «Yillik xizmat koʻrsatish» maydoniga kuygan choʻgʻlanma lampalarni almashtirish kiritilgan. Narxlar shartli." },
+    },
+
+    anx: {
+      percent: function (n) { return n + "\u00A0%"; },
+      noChange: function () { return "Tarif va xizmat narxining oshishi, pulning vaqt qiymati va qayta sotishni hisobga olish uchun slayderlarni suring yoki qayta sotish narxini kiriting. Hozircha hisob asosiy model bilan bir xil."; },
+      cond: function (g, d, o) {
+        const p = ["Tarifning yiliga " + g + " oʻsishi"];
+        if (o && o.mg) p.push("xizmat narxining yiliga " + o.mg + " oʻsishi");
+        p.push(d + " stavka");
+        if (o && o.credit) p.push("muddatli toʻlov");
+        if (o && o.salvage) p.push("qayta sotish narxi");
+        return p.length === 1 ? p[0] : p.slice(0, -1).join(", ") + " va " + p[p.length - 1];
+      },
+      same: function (cond, name, sum) { return cond + " hisobga olinganda xulosa oʻzgarmaydi: " + name + " bugungi pulda taxminan " + sum + " foydaliroq."; },
+      changed: function (cond, name, sum) { return cond + " hisobga olinganda xulosa oʻzgaradi: endi " + name + " bugungi pulda taxminan " + sum + " foydaliroq."; },
+      equal: function (cond) { return cond + " hisobga olinganda variantlar deyarli teng."; },
+      scenBase: function () { return "Asosiy model"; },
+      scenCredit: function () { return "+ muddatli toʻlov"; },
+      scenGrowth: function (g) { return "+ tarif oʻsishi " + g; },
+      scenNPV: function (d) { return "+ diskont " + d + " (NPV)"; },
+      scenMaint: function (h) { return "+ xizmat narxi oʻsishi " + h; },
+      scenSalvage: function () { return "+ qayta sotish"; },
+      months: function (n) { return n + " oyga muddatli toʻlov"; },
+      creditInfo: function (pmt, over) { return "Oylik toʻlov: " + pmt + ", ortiqcha toʻlov: " + over + "."; },
+      eacValue: function (sum) { return "yiliga " + sum; },
+      eacDesc: function (life) { return "Xizmat muddati: " + life + "."; },
+      eacVerdict: function (name, sum) { return "Har bir mahsulot oʻz xizmat muddati boʻyicha hisoblansa, " + name + " yiliga taxminan " + sum + " arzonroq."; },
+      eacEqual: function () { return "Har bir mahsulot oʻz xizmat muddati boʻyicha hisoblansa, ularning yillik xarajatlari deyarli teng."; },
+      thresholdValue: function (sum) { return "1 kVt·soat uchun " + sum; },
+      thresholdDesc: function (saver, other) { return "Agar 1 kVt·soat qimmatroq boʻlsa, " + saver + " foydaliroq, arzonroq boʻlsa — " + other + "."; },
+      thresholdNone: function () { return "Tarif xulosaga taʼsir qilmaydi: mahsulotlarning elektr isteʼmoli bir xil."; },
+      thresholdAlways: function (name) { return "Har qanday tarifda " + name + " foydaliroq."; },
+      paybackDesc: function () { return "Shuncha yildan keyin tejamkorroq mahsulot xariddagi ortiqcha toʻlovni qoplaydi — tarif oʻsishi va stavka hisobga olingan holda."; },
+      paybackNotNeeded: function (name) { return "Kerak emas: " + name + " ham xaridda, ham foydalanishda arzonroq."; },
+      paybackSamePrice: function () { return "Kerak emas: xarid narxi bir xil."; },
+      paybackNever: function () { return "Ortiqcha toʻlov 30 yil ichida qoplanmaydi."; },
+      axisTariff: function (cur) { return "tarif, " + cur + "/kVt·soat"; },
+      regionBetter: function (name) { return name + " foydaliroq"; }
+    },
+
+    ex: {
+      headlineEqual: function (period, sum) {
+        return "Belgilangan shartlarda " + period + " davomida ikkala mahsulot bir xil — taxminan " + sum + "ga tushadi.";
+      },
+      headlineDiff: function (period, cheaper, diff, other) {
+        return "Belgilangan shartlarda " + period + " davomida " + cheaper + " " + other + " bilan solishtirganda taxminan " + diff + " arzonroq tushadi.";
+      },
+      labelPurchase: function () { return "xarid narxidagi"; },
+      labelEnergy: function (period) { return period + " davomidagi elektr xarajatlaridagi"; },
+      labelMaint: function (period) { return period + " davomidagi xizmat koʻrsatish xarajatlaridagi"; },
+      topFactor: function (label, sum) { return "Natijaga eng koʻp " + label + " farq taʼsir qildi: " + sum + "."; },
+      sameBoth: function () { return "Mahsulotlarning xarid narxi va yillik xarajatlari bir xil."; },
+      samePrice: function (name, sum) {
+        return "Xarid narxi bir xil, shuning uchun hammasini yillik xarajatlar hal qiladi: " + name + " uchun ular yiliga " + sum + " kamroq.";
+      },
+      sameAnnual: function () { return "Yillik xarajatlar bir xil, shuning uchun farq faqat xarid narxidan kelib chiqadi."; },
+      bothCheaper: function (name) {
+        return name + " ham xaridda, ham yillik xarajatlarda arzonroq, shuning uchun har qanday muddatda foydaliroq boʻlib qoladi.";
+      },
+      tradeoff: function (buy, dP, dA, t) {
+        return buy + " xaridda " + dP + " arzonroq, lekin har yili " + dA +
+          " qimmatroq tushadi (elektr energiyasi va xizmat koʻrsatish). Umumiy xarajatlar taxminan " + t + "dan keyin tenglashadi.";
+      },
+      tradeoffAfter: function (period, name) { return " Shuning uchun " + period + " davomida " + name + " foydaliroq."; },
+      tradeoffBefore: function (period, buy, annual) {
+        return " " + period + " davomida " + buy + " hali foydaliroq, lekin uzoqroq foydalanilsa, ustunlik " + annual + " tomoniga oʻtadi.";
+      },
+      smallDiff: function () {
+        return "Farq umumiy summaning 3 foizidan kam. Kiritilgan maʼlumotlardagi kichik noaniqlik xulosani oʻzgartirishi mumkin, shuning uchun variantlarni deyarli teng deb hisoblash mumkin.";
+      }
+    }
+  },
+
+  /* ===================== English ===================== */
+  en: {
+    htmlLang: "en",
+    groupSep: ",",                // 4,000,000
+    decimalSep: ".",              // 2.5
+    compactSep: "",
+    compact: [[1e9, "B"], [1e6, "M"], [1e3, "K"]],
+    currency: "UZS",
+    quote: function (s) { return "“" + s + "”"; },
+    yearsWord: function (n) { return n === 1 ? "year" : "years"; },
+    formErrors: function (n) {
+      return n === 1 ? "Check the highlighted field." : "Check the highlighted fields — there are " + n + ".";
+    },
+    equalAt: function (t) { return "equal ≈ after " + t; },
+
+    title: "SmartChoice Analytics — Total Cost of Ownership Calculator",
+    metaDesc: "Free total cost of ownership (TCO) calculator with an NPV mode. Compare two products by price, electricity, maintenance and resale value.",
+    langNav: "Language",
+    h1: "Cheaper in the store doesn’t mean cheaper over five years",
+    lede: "Enter the price, energy use and maintenance costs of two products. The calculator shows the estimated total cost of ownership over the period you choose and explains where the difference comes from.",
+    condTitle: "Shared conditions",
+    condHint: "The same for both products.",
+    tariffLabel: "Price of 1 kWh of electricity",
+    tariffHelp: "Shown on your electricity bill.",
+    yearsLabel: "Comparison period",
+    yearsHelp: "How many years you plan to use the product, from 1 to 30.",
+    unitYears: "years",
+    unitKwh: "kWh",
+    productA: "Product A",
+    productB: "Product B",
+    nameLabel: "Name",
+    optional: "(optional)",
+    namePhA: "For example, Samsung fridge",
+    namePhB: "For example, LG fridge",
+    priceLabel: "Purchase price",
+    priceHelp: "The price in the store.",
+    energyLabel: "Energy use per year",
+    energyHelp: "Shown on the energy label. If the product doesn’t use electricity, enter 0.",
+    maintLabel: "Maintenance per year",
+    maintHelp: "Filters, cleaning, servicing — a rough estimate. If there are none, enter 0.",
+    btnCalc: "Calculate",
+    btnReset: "Clear",
+    exampleNote: "The ready-made examples are for learning only: they are rounded estimates, not data for specific models. Enter real prices and your rate before making a decision.",
+    staleNote: "Your data changed, but some fields aren’t filled in correctly. The previous result is shown below.",
+    bdPurchase: "Purchase",
+    bdEnergy: "Electricity",
+    bdMaint: "Maintenance",
+    bdAnnual: "Cost per year",
+    stackTitle: "What the total is made of",
+    chartTitle: "Cumulative costs by year",
+    chartIntro: "The lines show how much you’ll have spent in total by the end of each year. Where the lines cross, the two products cost the same.",
+    axisYears: "years",
+    tableToggle: "Show year-by-year table",
+    thYear: "Year",
+    thDiff: "Difference (A − B)",
+    year0: "0 (purchase)",
+    explainTitle: "Why this result",
+    disclaimer: "This is an estimate based on the data you entered, not a guarantee of savings.",
+    btnEdit: "Edit data",
+    howTitle: "How the result is calculated",
+    formulaLegend: "TCO — total cost of ownership, P — purchase price, E — energy use per year (kWh), R — price of 1 kWh, Y — period in years, M — maintenance per year.",
+    includedTitle: "What’s included",
+    inc1: "Purchase price.",
+    inc2: "Electricity: yearly use × rate × period.",
+    inc3: "Maintenance: yearly cost × period.",
+    excludedTitle: "What’s not included",
+    exc3: "Major breakdowns and repairs.",
+    exc4: "The price you could resell the product for.",
+    exc6: "Real energy use may differ from the label.",
+    asmNote: "Rising rates and maintenance costs, the time value of money, installment plans, the resale price and different lifespans can be taken into account in analyst mode.",
+    footer: "SmartChoice Analytics is a student project. All calculations run in your browser; the data you enter isn’t sent anywhere.",
+
+    err_price_empty: "Enter the purchase price.",
+    err_energy_empty: "Enter the yearly energy use. If the product doesn’t use electricity, enter 0.",
+    err_maint_empty: "Enter the yearly maintenance cost. If there is none, enter 0.",
+    err_tariff_empty: "Enter the price of 1 kWh.",
+    err_years_empty: "Enter the comparison period in years.",
+    err_nan: "Enter a number using digits, for example 4,000,000.",
+    err_nan_years: "Enter a number using digits, for example 5.",
+    err_negative: "The value can’t be negative.",
+    err_years_range: "Enter a whole number of years from 1 to 30.",
+    err_price_zero: "The price must be greater than zero.",
+    err_price_big: "That price is too high — check for extra zeros.",
+    err_energy_big: "Over 20,000 kWh a year is what a whole house uses. Check the value on the label.",
+    err_maint_big: "That amount is too high — check for extra zeros.",
+    err_tariff_big: "That rate is too high — check the value on your bill.",
+
+    navLabel: "Site sections",
+    nav_calc: "Calculator",
+    nav_results: "Results",
+    nav_method: "Methodology",
+    nav_about: "About",
+    stepsLabel: "How it works",
+    step1: "Enter the rate and period",
+    step2: "Add details for two products",
+    step3: "Compare the results and test the assumptions",
+    btnShare: "Share the result",
+    btnPrint: "PDF / print",
+    shareCopied: "Link copied — send it via Telegram or email.",
+    shareManual: "Copy the link:",
+    shareText: "Total cost of ownership comparison — SmartChoice Analytics",
+    sharedNote: "You opened a shared comparison. You can change the data.",
+    printSummary: "Input data",
+    printDate: "Date of calculation",
+    about_title: "About the project",
+    about_why_title: "Why this site exists",
+    about_why: "When buying appliances, most people compare only the price tag. But a fridge, air conditioner or washing machine runs for years, and electricity and maintenance can cost more than the price difference. SmartChoice Analytics helps you see the full cost of a purchase before the money is spent.",
+    about_how_title: "How accuracy is ensured",
+    about_how: "All formulas are open and explained in the Methodology section. The calculations are checked by automated tests — from the total cost of ownership formula to NPV, annuities and EAC. The site works without sign-up, and the data you enter never leaves your browser.",
+    about_tests: "Open the tests",
+    about_ai_title: "Use of AI",
+    about_ai: "The idea, the concept and the decisions about what to include in the financial model are the author’s. The site’s code was written with the help of the AI assistant Claude (Anthropic), based on that concept. The calculator itself uses no neural networks or machine learning: every result comes from open financial formulas.",
+    about_author_title: "Author",
+    about_role: "Project author · Prospective Finance undergraduate",
+    about_github: "Source code on GitHub",
+    about_version: "Version",
+    an_title: "Analyst mode",
+    an_badge: "NPV & sensitivity",
+    an_intro: "The basic model assumes that the electricity rate and maintenance never get more expensive, that money in five years is worth the same as today, and that the product is worth nothing at the end. Here you can account for rising rates and maintenance costs, the time value of money and the resale price — the way it’s done in corporate finance.",
+    an_growth: "Yearly rate increase",
+    an_growthHelp: "How much the price of 1 kWh rises per year on average.",
+    an_discount: "Discount rate",
+    an_discountHelp: "What the money would earn in a year if it sat in the bank — for example, a deposit rate.",
+    an_threshold: "Break-even rate",
+    an_payback: "Discounted payback",
+    an_scenarios: "How the conclusion changes",
+    an_thScenario: "Scenario",
+    an_thBetter: "Better deal",
+    an_sensTitle: "Sensitivity to the electricity rate",
+    an_sensIntro: "The line shows how much better a deal product A is than product B at different prices per kWh, in today’s money. Above zero, A is better; below zero, B is.",
+    an_formulaToggle: "Formula and assumptions",
+    an_formulaNote: "g — yearly rate increase, h — yearly maintenance cost increase, d — discount rate, k — year number, S — resale price at the end of the comparison period Y (discounted by the factor (1 + d)^−Y). P — the purchase price in today’s money: the price itself when you pay at once, or the present value of the monthly payments PMT with an installment plan (r — yearly interest rate, n — number of months). Electricity and maintenance are assumed to be paid at the end of each year, and in the first year prices equal today’s. EAC assumes that when a product’s lifespan L ends, it’s replaced with the same product; EAC ignores the resale price, because the product is used until the end of its lifespan. Payback is calculated without resale, because the resale price is only known for the end of the period. With g = 0, h = 0, d = 0, S = 0 and no installment plan, the formula matches the basic one.",
+    an_markCurrent: "your rate",
+    an_markThreshold: "break-even",
+    an_almostEqual: "about equal",
+    an_buyTitle: "Purchase, resale and lifespan",
+    an_buyHint: "Set separately for each product. All fields are optional.",
+    an_payMethod: "How it’s paid for",
+    an_cash: "Upfront, no installments",
+    an_rate: "Yearly interest rate",
+    an_rateHelp: "If the plan is interest-free, leave it at 0%.",
+    an_life: "Lifespan",
+    an_lifeNone: "Not set",
+    an_eacTitle: "Different lifespans: equivalent annual cost (EAC)",
+    an_eacIntro: "If the products last for different lengths of time, comparing totals over one period isn’t fair: the shorter-lived one has to be replaced sooner. EAC turns all of a product’s costs over its lifespan into an equal amount per year — the way corporate finance compares equipment with different lifespans. The resale price isn’t included here: the product is used until the end of its lifespan.",
+    an_eacHint: "To see the comparison, choose a lifespan for both products above.",
+
+    an_mgrowth: "Maintenance cost increase per year",
+    an_mgrowthHelp: "How much service and repairs get more expensive each year on average. The first year uses today’s price.",
+    an_salvage: "Resale price at the end of the comparison period",
+    an_salvageHelp: "What you would get for selling the product at the end of the period. If you don’t plan to sell it, leave this empty.",
+    err_salvage_big: "The resale price can’t be higher than the purchase price.",
+    presetsTitle: "Quick start: ready-made examples",
+    presetsHint: "Pick a real-life situation — the fields fill in by themselves and the calculation runs right away.",
+    presetCase: "Example",
+    pr_title: "Report: total cost of ownership",
+    pr_conclusion: "Financial conclusion",
+    pr_summary: "Calculation summary",
+    pr_metrics: "Key metrics",
+    pr_yearsTable: "Year-by-year table",
+    pr_results: "Result over the period",
+    pr_tco: "Total cost of ownership (TCO)",
+    pr_npv: "In today’s money (NPV)",
+    pr_resale: "Resale price",
+    pr_breakeven: "Break-even point",
+    pr_formula: "Formulas",
+    pr_eac: "Equivalent annual cost (EAC)",
+    pr_period: "Period",
+    pr_npvTitle: "Analyst mode: NPV, price growth, resale",
+    pr_assump: "Assumptions",
+    pr_none: "none",
+
+    printHelp: "If the print window didn’t open, open the site in a regular browser (Chrome, Safari, Firefox) — not in Telegram’s built-in browser or a file preview — and press the button again. Ctrl+P (Cmd+P on a Mac) works too.",
+    presets: {
+      ac: { label: "Standard vs inverter air conditioner", meta: "12 BTU · 7 years", nameA: "Standard air conditioner", nameB: "Inverter air conditioner",
+        note: "A 12 BTU air conditioner in a living room, about 1,000 hours of operation a year. Prices are rounded estimates from online listings (≈3.0 and ≈4.3 million UZS). The rate of 900 UZS is the 201–500 kWh-a-month tier. Rate increase 10% a year (the cap on yearly indexation for households), maintenance 8%, discount 15%; the resale price is for 7 years from now." },
+      car: { label: "Petrol car vs electric car", meta: "5 years · 15,000 km a year", nameA: "Petrol car", nameB: "Electric car",
+        note: "Driving 15,000 km a year. For the petrol car, fuel (≈7.5 L per 100 km at ≈12,000 UZS a litre) and servicing are entered under “Maintenance per year”, and its energy use is 0. The electric car is charged at home: ≈15 kWh per 100 km at 1,100 UZS (the 501–1,000 kWh-a-month tier). Prices are rounded estimates. The resale price after 5 years is about 60% and 42% of the purchase price." },
+      fridge: { label: "Fridge class A vs A+++", meta: "10 years · about 300 L", nameA: "Class A fridge", nameB: "Class A+++ fridge",
+        note: "A fridge of about 300 L: class A (≈360 kWh a year) vs A+++ (≈170 kWh a year). Prices are illustrative. Rate 900 UZS, rising 10% a year. Open analyst mode and look at the “Break-even rate”: how expensive a kWh has to be before the pricier fridge starts to pay off." },
+      led: { label: "Incandescent vs LED bulbs", meta: "5 years · 10 bulbs", nameA: "Incandescent bulbs 60 W", nameB: "LED bulbs 9 W",
+        note: "10 bulbs, 4 hours a day: 60 W incandescent vs 9 W LED. Replacing burnt-out incandescent bulbs is entered under “Maintenance per year”. Prices are illustrative." },
+    },
+
+    anx: {
+      percent: function (n) { return n + "%"; },
+      noChange: function () { return "Move the sliders or enter a resale price to account for rising rates and maintenance, the time value of money and resale. For now the result matches the basic model."; },
+      cond: function (g, d, o) {
+        const p = ["rates rising " + g + " a year"];
+        if (o && o.mg) p.push("maintenance costs rising " + o.mg + " a year");
+        p.push("a " + d + " discount rate");
+        if (o && o.credit) p.push("the installment plan");
+        if (o && o.salvage) p.push("the resale price");
+        return p.length === 1 ? p[0] : p.slice(0, -1).join(", ") + " and " + p[p.length - 1];
+      },
+      same: function (cond, name, sum) { return "With " + cond + ", the conclusion holds: " + name + " is better by about " + sum + " in today’s money."; },
+      changed: function (cond, name, sum) { return "With " + cond + ", the conclusion flips: " + name + " is now better by about " + sum + " in today’s money."; },
+      equal: function (cond) { return "With " + cond + ", the options are about equal."; },
+      scenBase: function () { return "Basic model"; },
+      scenCredit: function () { return "+ installment plan"; },
+      scenGrowth: function (g) { return "+ rate increase " + g; },
+      scenNPV: function (d) { return "+ discount " + d + " (NPV)"; },
+      scenMaint: function (h) { return "+ maintenance increase " + h; },
+      scenSalvage: function () { return "+ resale"; },
+      months: function (n) { return n + "-month installment plan"; },
+      creditInfo: function (pmt, over) { return "Monthly payment: " + pmt + ", total interest: " + over + "."; },
+      eacValue: function (sum) { return sum + " per year"; },
+      eacDesc: function (life) { return "Lifespan: " + life + "."; },
+      eacVerdict: function (name, sum) { return "When each product is costed over its own lifespan, " + name + " is cheaper by about " + sum + " a year."; },
+      eacEqual: function () { return "When each product is costed over its own lifespan, their yearly costs are about equal."; },
+      thresholdValue: function (sum) { return sum + " per kWh"; },
+      thresholdDesc: function (saver, other) { return "If 1 kWh costs more than this, " + saver + " is the better deal; if less, " + other + "."; },
+      thresholdNone: function () { return "The rate doesn’t affect the result: both products use the same amount of energy."; },
+      thresholdAlways: function (name) { return name + " is the better deal at any rate."; },
+      paybackDesc: function () { return "How long the more efficient product takes to earn back its higher price — with rising rates and the discount rate."; },
+      paybackNotNeeded: function (name) { return "Not needed: " + name + " is cheaper both to buy and to run."; },
+      paybackSamePrice: function () { return "Not needed: the purchase prices are the same."; },
+      paybackNever: function () { return "The higher price isn’t earned back within 30 years."; },
+      axisTariff: function (cur) { return "rate, " + cur + "/kWh"; },
+      regionBetter: function (name) { return name + " is better"; }
+    },
+
+    ex: {
+      headlineEqual: function (period, sum) {
+        return "Under these conditions, both products will cost the same over " + period + " — about " + sum + ".";
+      },
+      headlineDiff: function (period, cheaper, diff, other) {
+        return "Under these conditions, over " + period + " " + cheaper + " will cost about " + diff + " less than " + other + ".";
+      },
+      labelPurchase: function () { return "the purchase price"; },
+      labelEnergy: function (period) { return "electricity costs over " + period; },
+      labelMaint: function (period) { return "maintenance costs over " + period; },
+      topFactor: function (label, sum) { return "The biggest factor was the difference in " + label + ": " + sum + "."; },
+      sameBoth: function () { return "The products have the same purchase price and the same yearly costs."; },
+      samePrice: function (name, sum) {
+        return "The purchase price is the same, so yearly costs decide: " + name + " costs " + sum + " less per year.";
+      },
+      sameAnnual: function () { return "Yearly costs are the same, so the difference comes only from the purchase price."; },
+      bothCheaper: function (name) {
+        return name + " is cheaper both to buy and to run each year, so it stays the better deal over any period.";
+      },
+      tradeoff: function (buy, dP, dA, t) {
+        return buy + " is " + dP + " cheaper to buy, but costs " + dA +
+          " more each year (electricity and maintenance). Total costs even out after about " + t + ".";
+      },
+      tradeoffAfter: function (period, name) { return " So over " + period + ", " + name + " is the better deal."; },
+      tradeoffBefore: function (period, buy, annual) {
+        return " Over " + period + ", " + buy + " is still the better deal, but with longer use the advantage shifts to " + annual + ".";
+      },
+      smallDiff: function () {
+        return "The difference is under 3% of the total. A small error in the data you entered could change the conclusion, so the options are almost equal.";
+      }
+    }
+  }
+};
+
+</script>
+<script>
+"use strict";
+
+/*
+  SmartChoice Analytics — логика калькулятора.
+
+  Часть 1 — расчёты. Это «чистые» функции: получают числа, возвращают числа или текст
+  и ничего не трогают на странице. Именно их проверяет файл tests.html.
+
+  Часть 2 — работа со страницей: язык, чтение формы, сообщения об ошибках, вывод результатов.
+
+  Все тексты интерфейса лежат в i18n.js (русский, узбекский, английский).
+*/
+
+(function () {
+
+  const I18N = window.SC_I18N;
+
+  // Словарь нужного языка (по умолчанию — русский)
+  function dict(lang) { return I18N[lang] || I18N.ru; }
+
+  /* =====================================================================
+     Часть 1. Расчёты
+     ===================================================================== */
+
+  // Превращает текст из поля в число.
+  // Русский и узбекский: "4 000 000" → 4000000, "1000,5" → 1000.5
+  // Английский:          "4,000,000" → 4000000, "1000.5" → 1000.5
+  // Пустая строка → null, текст с буквами → NaN
+  function parseNumber(raw, lang) {
+    if (raw === null || raw === undefined) return null;
+    let s = String(raw).replace(/[\s\u00A0\u202F]/g, "");
+    s = (lang === "en") ? s.replace(/,/g, "") : s.replace(",", ".");
+    if (s === "") return null;
+    if (!/^-?\d+(\.\d+)?$/.test(s)) return NaN;
+    return Number(s);
+  }
+
+  // Правила проверки. В полях empty/tooBig — ключи сообщений из i18n.js
+  const RULES = {
+    price: { empty: "err_price_empty", positive: true, max: 1e11, tooBig: "err_price_big" },
+    energy: { empty: "err_energy_empty", max: 20000, tooBig: "err_energy_big" },
+    maintenance: { empty: "err_maint_empty", max: 1e10, tooBig: "err_maint_big" },
+    tariff: { empty: "err_tariff_empty", max: 100000, tooBig: "err_tariff_big" },
+    years: { empty: "err_years_empty", integer: true, min: 1, max: 30, range: "err_years_range" }
+  };
+
+  // Проверяет одно значение. Возвращает { value, error }, где error — ключ сообщения или null.
+  function validateValue(raw, rule, lang) {
+    const value = parseNumber(raw, lang);
+    if (value === null) return { value: null, error: rule.empty };
+    if (Number.isNaN(value)) return { value: null, error: rule.integer ? "err_nan_years" : "err_nan" };
+    if (value < 0) return { value: null, error: "err_negative" };
+    if (rule.integer) {
+      if (!Number.isInteger(value) || value < rule.min || value > rule.max) return { value: null, error: rule.range };
+      return { value: value, error: null };
+    }
+    if (rule.positive && value === 0) return { value: null, error: "err_price_zero" };
+    if (value > rule.max) return { value: null, error: rule.tooBig };
+    return { value: value, error: null };
+  }
+
+  // Главная формула: TCO = P + (E × R × Y) + (M × Y)
+  // item = { price, energy, maintenance }
+  function calculateTCO(item, tariff, years) {
+    const energyPerYear = item.energy * tariff;           // E × R
+    const annual = energyPerYear + item.maintenance;      // расходы за один год
+    const energy = energyPerYear * years;                 // E × R × Y
+    const maintenance = item.maintenance * years;         // M × Y
+    return {
+      purchase: item.price,
+      energy: energy,
+      maintenance: maintenance,
+      annual: annual,
+      total: item.price + energy + maintenance
+    };
+  }
+
+  // Накопленные расходы к концу каждого года: [год 0, год 1, ..., год Y]
+  function cumulativeCosts(tco, years) {
+    const out = [];
+    for (let y = 0; y <= years; y++) out.push(tco.purchase + tco.annual * y);
+    return out;
+  }
+
+  // Точка равенства: через сколько лет общие расходы двух товаров сравниваются.
+  // Решаем Pa + Aa·t = Pb + Ab·t  →  t = (Pb − Pa) / (Aa − Ab)
+  // Возвращает null, если линии не пересекаются при t > 0.
+  function breakEven(a, b) {
+    const annualDiff = a.annual - b.annual;
+    if (annualDiff === 0) return null;
+    const t = (b.purchase - a.purchase) / annualDiff;
+    return t > 0 ? t : null;
+  }
+
+  /* ---------- Режим аналитика: рост цен, перепродажа и дисконтирование ----------
+     g — рост тарифа в год (0.1 = 10 %), h — рост стоимости обслуживания в год,
+     d — ставка дисконтирования (0.15 = 15 %), S — цена перепродажи в конце срока сравнения Y.
+     Расходы года k (k = 1…Y) считаются оплаченными в конце года:
+       электроэнергия: E × R × (1 + g)^(k−1),  обслуживание: M × (1 + h)^(k−1)
+     и приводятся к сегодняшним деньгам делением на (1 + d)^k.
+     NPV = P + Σ (E × R × (1 + g)^(k−1) + M × (1 + h)^(k−1)) / (1 + d)^k − S / (1 + d)^Y
+     При g = h = d = 0 и S = 0 это та же формула, что и базовая.                       */
+
+  // F — множитель для электроэнергии, G — для обслуживания (h — рост обслуживания, по умолчанию 0)
+  function pvFactors(years, g, d, h) {
+    const hh = h || 0;
+    let F = 0, G = 0;
+    for (let k = 1; k <= years; k++) {
+      const disc = Math.pow(1 + d, k);
+      F += Math.pow(1 + g, k - 1) / disc;
+      G += Math.pow(1 + hh, k - 1) / disc;
+    }
+    return { F: F, G: G };
+  }
+
+  // Цена перепродажи в конце срока Y в сегодняшних деньгах: S / (1 + d)^Y. Нет цены — 0.
+  function salvagePV(item, years, d) {
+    const sv = item.salvage || 0;
+    return sv > 0 ? sv / Math.pow(1 + d, years) : 0;
+  }
+
+  /* ---------- Муддатли тўлов / рассрочка ----------
+     Ежемесячный платёж по аннуитету: PMT = P × i / (1 − (1 + i)^−n), i = r / 12
+     r — процент в год (0.24 = 24 %), n — число месяцев. При r = 0 платёж = P / n.     */
+  function loanPayment(price, annualRate, months) {
+    if (!months || months <= 0) return null;
+    const i = annualRate / 12;
+    return i === 0 ? price / months : price * i / (1 - Math.pow(1 + i, -months));
+  }
+
+  // Ежемесячная ставка, эквивалентная годовой ставке дисконтирования d
+  function monthlyDiscount(d) { return Math.pow(1 + d, 1 / 12) - 1; }
+
+  // Стоимость покупки в сегодняшних деньгах.
+  // Без рассрочки — цена. С рассрочкой — приведённая стоимость всех ежемесячных платежей.
+  function purchasePV(item, d) {
+    const c = item.credit;
+    if (!c || !c.months) return item.price;
+    const pmt = loanPayment(item.price, c.rate, c.months);
+    const dm = monthlyDiscount(d);
+    return dm === 0 ? pmt * c.months : pmt * (1 - Math.pow(1 + dm, -c.months)) / dm;
+  }
+
+  // Платежи по покупке, приведённые к сегодняшнему дню, за каждый год: [год 0, год 1, ...]
+  function purchaseByYear(item, d, maxYears) {
+    const out = [];
+    for (let k = 0; k <= maxYears; k++) out.push(0);
+    const c = item.credit;
+    if (!c || !c.months) { out[0] = item.price; return out; }
+    const pmt = loanPayment(item.price, c.rate, c.months);
+    const dm = monthlyDiscount(d);
+    for (let m = 1; m <= c.months; m++) {
+      const year = Math.ceil(m / 12);
+      if (year <= maxYears) out[year] += pmt / Math.pow(1 + dm, m);
+    }
+    return out;
+  }
+
+  // Стоимость владения в сегодняшних деньгах: с учётом рассрочки (item.credit), роста обслуживания h
+  // и цены перепродажи (item.salvage). salvage в результате — цена перепродажи в сегодняшних деньгах.
+  function calculateNPV(item, tariff, years, g, d, h) {
+    const f = pvFactors(years, g, d, h);
+    const purchase = purchasePV(item, d);
+    const energy = item.energy * tariff * f.F;
+    const maintenance = item.maintenance * f.G;
+    const salvage = salvagePV(item, years, d);
+    return { purchase: purchase, energy: energy, maintenance: maintenance, salvage: salvage,
+             total: purchase + energy + maintenance - salvage };
+  }
+
+  // Накопленные расходы в сегодняшних деньгах к концу каждого года: [год 0 … год maxYears].
+  // Цена перепродажи не вычитается: она известна только на конец срока.
+  function cumulativePV(item, tariff, maxYears, g, d, h) {
+    const hh = h || 0;
+    const buy = purchaseByYear(item, d, maxYears);
+    const out = [buy[0]];
+    let sum = buy[0];
+    for (let k = 1; k <= maxYears; k++) {
+      sum += buy[k] + (item.energy * tariff * Math.pow(1 + g, k - 1) + item.maintenance * Math.pow(1 + hh, k - 1)) / Math.pow(1 + d, k);
+      out.push(sum);
+    }
+    return out;
+  }
+
+  /* ---------- Разный срок службы: годовая эквивалентная стоимость (EAC) ----------
+     EAC = NPV за срок службы L × CRF,  CRF = d / (1 − (1 + d)^−L),  при d = 0 CRF = 1 / L
+     Предполагается, что после окончания срока службы товар заменяется таким же.        */
+  function capitalRecovery(d, life) {
+    return d === 0 ? 1 / life : d / (1 - Math.pow(1 + d, -life));
+  }
+
+  // Цена перепродажи в EAC не учитывается: товар используется до конца срока службы.
+  function calculateEAC(item, tariff, life, g, d, h) {
+    const noResale = Object.assign({}, item, { salvage: 0 });
+    return calculateNPV(noResale, tariff, life, g, d, h).total * capitalRecovery(d, life);
+  }
+
+  // Порог тарифа: цена 1 кВт·ч, при которой NPV двух товаров равны.
+  // NPVa − NPVb = (Pa − Pb) + (Ea − Eb)·R·F + (Ma − Mb)·G − (SPVa − SPVb) = 0
+  //   →  R = −((Pa − Pb) + (Ma − Mb)·G − (SPVa − SPVb)) / ((Ea − Eb)·F),   SPV = S / (1 + d)^Y
+  // null — если энергопотребление одинаковое или порог не положительный.
+  function thresholdTariff(a, b, years, g, d, h) {
+    const dE = a.energy - b.energy;
+    if (dE === 0) return null;
+    const f = pvFactors(years, g, d, h);
+    const fixed = (purchasePV(a, d) - purchasePV(b, d)) + (a.maintenance - b.maintenance) * f.G
+                - (salvagePV(a, years, d) - salvagePV(b, years, d));
+    const r = -fixed / (dE * f.F);
+    return r > 0 ? r : null;
+  }
+
+  // Дисконтированная окупаемость: через сколько лет накопленные расходы (в сегодняшних деньгах)
+  // сравниваются. Между годами — линейная интерполяция. null — если не сравниваются за maxYears лет.
+  function paybackYears(a, b, tariff, g, d, maxYears, h) {
+    const n = maxYears || 30;
+    const ca = cumulativePV(a, tariff, n, g, d, h);
+    const cb = cumulativePV(b, tariff, n, g, d, h);
+    let k0 = 0;
+    while (k0 <= n && Math.abs(ca[k0] - cb[k0]) < 1e-9) k0++;
+    if (k0 > n) return null;
+    const sign0 = Math.sign(ca[k0] - cb[k0]);
+    for (let k = k0 + 1; k <= n; k++) {
+      const prev = ca[k - 1] - cb[k - 1];
+      const cur = ca[k] - cb[k];
+      if (Math.abs(cur) < 1e-9) return k;
+      if (Math.sign(cur) !== sign0) return (k - 1) + prev / (prev - cur);
+    }
+    return null;
+  }
+
+  /* ---------- Ссылка «Поделиться» ----------
+     Все данные сравнения кладутся в адрес страницы после «#», например:
+     index.html#t=1000&y=5&ap=4000000&ae=300&am=100000&bp=3200000...
+     Сервер не нужен: ссылку открывает браузер получателя и заполняет форму сам.   */
+
+  const TERMS = [0, 3, 6, 9, 12, 18, 24, 36];   // варианты рассрочки, месяцев
+
+  function encodeShare(st) {
+    const p = new URLSearchParams();
+    p.set("t", st.tariff);
+    p.set("y", st.years);
+    ["a", "b"].forEach(function (k) {
+      const x = st[k];
+      if (x.name) p.set(k + "n", x.name);
+      p.set(k + "p", x.price);
+      p.set(k + "e", x.energy);
+      p.set(k + "m", x.maintenance);
+      if (x.term) { p.set(k + "t", x.term); p.set(k + "r", x.rate); }
+      if (x.life) p.set(k + "l", x.life);
+      if (x.salvage) p.set(k + "s", x.salvage);
+    });
+    if (st.g) p.set("g", st.g);
+    if (st.h) p.set("h", st.h);
+    if (st.d) p.set("d", st.d);
+    if (st.lang) p.set("lang", st.lang);
+    return p.toString();
+  }
+
+  // Читает данные из ссылки. Возвращает null, если в ссылке нет сравнения.
+  // Значения полей остаются строками — их потом проверяет обычная проверка формы.
+  // Ползунки и списки ограничиваются допустимыми значениями.
+  function decodeShare(str) {
+    const p = new URLSearchParams(String(str || "").replace(/^#/, ""));
+    if (!p.has("t") || !p.has("ap") || !p.has("bp")) return null;
+    const num = function (k) {
+      if (!p.has(k)) return null;
+      const v = Number(p.get(k));
+      return Number.isFinite(v) ? v : null;
+    };
+    const clamp = function (v, min, max, step) {
+      if (v === null) return min;
+      return Math.min(max, Math.max(min, Math.round(v / step) * step));
+    };
+    const product = function (k) {
+      const term = num(k + "t");
+      return {
+        name: (p.get(k + "n") || "").slice(0, 40),
+        price: p.get(k + "p") || "",
+        energy: p.get(k + "e") || "",
+        maintenance: p.get(k + "m") || "",
+        term: TERMS.indexOf(term) !== -1 ? term : 0,
+        rate: clamp(num(k + "r"), 0, 60, 1),
+        life: clamp(num(k + "l"), 0, 30, 1),
+        salvage: p.get(k + "s") || ""
+      };
+    };
+    return {
+      tariff: p.get("t") || "",
+      years: p.get("y") || "",
+      a: product("a"),
+      b: product("b"),
+      g: clamp(num("g"), 0, 30, 0.5),
+      h: clamp(num("h"), 0, 30, 0.5),
+      d: clamp(num("d"), 0, 30, 0.5),
+      lang: p.get("lang")
+    };
+  }
+
+  // ---------- Форматирование ----------
+  // Форматируем числа сами, а не через Intl: в некоторых браузерах (например, на Android)
+  // нет данных для узбекского языка, и числа выводились бы в чужом формате.
+  function formatNumber(v, lang, digits) {
+    const d = dict(lang);
+    const factor = Math.pow(10, digits || 0);
+    const n = Math.round(Math.abs(v) * factor) / factor;
+    const parts = String(n).split(".");
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, d.groupSep);
+    return (v < 0 && n !== 0 ? "−" : "") + intPart + (parts[1] ? d.decimalSep + parts[1] : "");
+  }
+
+  // Короткая запись для графика: 6 млн, 6 mln, 6M
+  function formatCompact(v, lang) {
+    const d = dict(lang);
+    for (let i = 0; i < d.compact.length; i++) {
+      const base = d.compact[i][0];
+      if (Math.abs(v) >= base) return formatNumber(v / base, lang, 1) + d.compactSep + d.compact[i][1];
+    }
+    return formatNumber(v, lang);
+  }
+
+  function formatSum(v, lang) {
+    return formatNumber(Math.round(v), lang) + "\u00A0" + dict(lang).currency;
+  }
+
+  function formatYears(t, lang) {
+    const d = dict(lang);
+    const rounded = Math.round(t * 10) / 10;
+    const text = formatNumber(rounded, lang, 1);
+    return text + "\u00A0" + d.yearsWord(rounded);
+  }
+
+  // Нейтральное объяснение результата: заголовок + несколько пунктов.
+  function buildExplanation(a, b, nameA, nameB, years, lang) {
+    const d = dict(lang);
+    const ex = d.ex;
+    const q = d.quote;
+    const sum = function (v) { return formatSum(v, lang); };
+    const period = years + "\u00A0" + d.yearsWord(years);
+    const diffTotal = Math.round(a.total) - Math.round(b.total);
+    const points = [];
+    let headline;
+
+    if (diffTotal === 0) {
+      headline = ex.headlineEqual(period, sum(a.total));
+    } else {
+      const cheaper = diffTotal < 0 ? nameA : nameB;
+      const other = diffTotal < 0 ? nameB : nameA;
+      headline = ex.headlineDiff(period, q(cheaper), sum(Math.abs(diffTotal)), q(other));
+    }
+
+    // 1. Какая часть расходов дала самую большую разницу
+    const parts = [
+      { label: ex.labelPurchase(), d: a.purchase - b.purchase },
+      { label: ex.labelEnergy(period), d: a.energy - b.energy },
+      { label: ex.labelMaint(period), d: a.maintenance - b.maintenance }
+    ];
+    const top = parts.reduce(function (m, p) { return Math.abs(p.d) > Math.abs(m.d) ? p : m; });
+    if (Math.abs(top.d) >= 0.5) points.push(ex.topFactor(top.label, sum(Math.abs(top.d))));
+
+    // 2. Компромисс «дешевле купить» против «дешевле содержать»
+    const dP = a.purchase - b.purchase;
+    const dA = a.annual - b.annual;
+    const sameP = Math.abs(dP) < 0.5;
+    const sameA = Math.abs(dA) < 0.5;
+
+    if (sameP && sameA) {
+      points.push(ex.sameBoth());
+    } else if (sameP) {
+      points.push(ex.samePrice(q(dA < 0 ? nameA : nameB), sum(Math.abs(dA))));
+    } else if (sameA) {
+      points.push(ex.sameAnnual());
+    } else {
+      const buyName = dP < 0 ? nameA : nameB;
+      const annualName = dA < 0 ? nameA : nameB;
+      if (buyName === annualName) {
+        points.push(ex.bothCheaper(q(buyName)));
+      } else {
+        const t = breakEven(a, b);
+        let s = ex.tradeoff(q(buyName), sum(Math.abs(dP)), sum(Math.abs(dA)), formatYears(t, lang));
+        if (t < years) s += ex.tradeoffAfter(period, q(annualName));
+        else if (t > years) s += ex.tradeoffBefore(period, q(buyName), q(annualName));
+        points.push(s);
+      }
+    }
+
+    // 3. Предупреждение, если разница слишком маленькая
+    const larger = Math.max(a.total, b.total);
+    if (diffTotal !== 0 && Math.abs(diffTotal) / larger < 0.03) points.push(ex.smallDiff());
+
+    return { headline: headline, points: points };
+  }
+
+  // Открываем функции для tests.html
+  window.SmartChoice = {
+    parseNumber: parseNumber,
+    RULES: RULES,
+    validateValue: validateValue,
+    calculateTCO: calculateTCO,
+    cumulativeCosts: cumulativeCosts,
+    breakEven: breakEven,
+    encodeShare: encodeShare,
+    decodeShare: decodeShare,
+    pvFactors: pvFactors,
+    loanPayment: loanPayment,
+    purchasePV: purchasePV,
+    salvagePV: salvagePV,
+    capitalRecovery: capitalRecovery,
+    calculateEAC: calculateEAC,
+    calculateNPV: calculateNPV,
+    cumulativePV: cumulativePV,
+    thresholdTariff: thresholdTariff,
+    paybackYears: paybackYears,
+    buildExplanation: buildExplanation,
+    formatNumber: formatNumber,
+    formatCompact: formatCompact,
+    formatSum: formatSum,
+    formatYears: formatYears
+  };
+
+
+  /* =====================================================================
+     Часть 2. Работа со страницей
+     ===================================================================== */
+
+  const form = document.getElementById("compare-form");
+  if (!form) return; // на странице тестов формы нет — дальше не идём
+
+  const $ = function (id) { return document.getElementById(id); };
+
+  let lang = "ru";               // текущий язык страницы
+  function t(key) { return dict(lang)[key]; }
+
+  // Числовые поля в порядке, в котором они стоят на странице
+  const FIELDS = [
+    { id: "tariff", rule: "tariff" },
+    { id: "years", rule: "years" },
+    { id: "a-price", rule: "price" },
+    { id: "a-energy", rule: "energy" },
+    { id: "a-maintenance", rule: "maintenance" },
+    { id: "b-price", rule: "price" },
+    { id: "b-energy", rule: "energy" },
+    { id: "b-maintenance", rule: "maintenance" }
+  ];
+  const FIELD_IDS = FIELDS.map(function (f) { return f.id; });
+
+  const results = $("results");
+  const formError = $("form-error");
+  const staleNote = $("stale-note");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lastInvalidCount = 0;
+
+  // Показывает или убирает ошибку поля. errorKey — ключ сообщения из i18n.js
+  function setFieldError(id, errorKey) {
+    const input = $(id);
+    const field = input.closest(".field");
+    const err = $(id + "-err");
+    if (errorKey) {
+      input.dataset.errKey = errorKey;
+      err.textContent = t(errorKey);
+      err.hidden = false;
+      field.classList.add("has-error");
+      input.setAttribute("aria-invalid", "true");
+    } else {
+      delete input.dataset.errKey;
+      err.textContent = "";
+      err.hidden = true;
+      field.classList.remove("has-error");
+      input.removeAttribute("aria-invalid");
+    }
+  }
+
+  // Читает и проверяет все поля
+  function readForm(showErrors) {
+    const values = {};
+    const invalid = [];
+    FIELDS.forEach(function (f) {
+      const r = validateValue($(f.id).value, RULES[f.rule], lang);
+      if (r.error) invalid.push(f.id);
+      else values[f.id] = r.value;
+      if (showErrors) setFieldError(f.id, r.error);
+    });
+    return { ok: invalid.length === 0, values: values, invalid: invalid };
+  }
+
+  function productName(id, fallbackKey) {
+    const v = $(id).value.trim();
+    return v ? v.slice(0, 40) : t(fallbackKey);
+  }
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  // Полоса «из чего складывается сумма»
+  function stackRow(name, tco, maxTotal, animate) {
+    const row = el("div", "stack-row");
+    const head = el("div", "stack-head");
+    head.append(el("span", "stack-name", name), el("span", "stack-value", formatSum(tco.total, lang)));
+
+    const track = el("div", "stack-track");
+    const bar = el("div", "stack-bar");
+    const target = (tco.total / maxTotal * 100) + "%";
+    bar.style.width = animate && !reduceMotion ? "0%" : target;
+
+    [
+      ["purchase", "seg-purchase", "bdPurchase"],
+      ["energy", "seg-energy", "bdEnergy"],
+      ["maintenance", "seg-maint", "bdMaint"]
+    ].forEach(function (s) {
+      if (tco[s[0]] <= 0) return;
+      const seg = el("span", "seg " + s[1]);
+      seg.style.flex = "0 0 " + (tco[s[0]] / tco.total * 100) + "%";
+      seg.title = t(s[2]) + ": " + formatSum(tco[s[0]], lang);
+      bar.appendChild(seg);
+    });
+
+    track.appendChild(bar);
+    row.append(head, track);
+
+    if (animate && !reduceMotion) {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { bar.style.width = target; });
+      });
+    }
+    return row;
+  }
+
+  // «Красивый» шаг для делений графика: 1, 2, 5, 10, 20, 50...
+  function niceStep(x) {
+    if (x <= 0) return 1;
+    const pow = Math.pow(10, Math.floor(Math.log10(x)));
+    const f = x / pow;
+    const nice = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10;
+    return nice * pow;
+  }
+
+  // Экранирование текста для SVG (на всякий случай)
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Линейный график накопленных расходов (SVG).
+  // width — реальная ширина блока на экране, чтобы на телефоне текст не был мелким
+  function buildChart(cumA, cumB, be, width, height) {
+    const W = Math.max(320, Math.min(720, Math.round(width || 640)));
+    const H = height || (W < 480 ? 260 : 300), L = W < 480 ? 52 : 70, R = 20, T = 30, B = 44;
+    const years = cumA.length - 1;
+    const maxRaw = Math.max.apply(null, cumA.concat(cumB));
+    const step = niceStep(maxRaw / 4);
+    const maxV = Math.ceil(maxRaw / step) * step;
+    const x = function (i) { return L + (i / years) * (W - L - R); };
+    const y = function (v) { return T + (1 - v / maxV) * (H - T - B); };
+
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" font-size="13">';
+
+    // Горизонтальные линии сетки и подписи сумм
+    for (let v = 0; v <= maxV + step / 2; v += step) {
+      s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" style="stroke:var(--line)"/>';
+      s += '<text x="' + (L - 10) + '" y="' + (y(v) + 4) + '" text-anchor="end" style="fill:var(--muted)">' +
+        (v === 0 ? "0" : esc(formatCompact(v, lang))) + '</text>';
+    }
+
+    // Подписи лет
+    const every = years <= 10 ? 1 : Math.ceil(years / 10);
+    for (let i = 0; i <= years; i += every) {
+      s += '<text x="' + x(i) + '" y="' + (H - B + 22) + '" text-anchor="middle" style="fill:var(--muted)">' + i + '</text>';
+    }
+    s += '<text x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end" style="fill:var(--muted)">' + esc(t("axisYears")) + '</text>';
+
+    // Линии товаров
+    function line(cum, color, dash) {
+      const pts = cum.map(function (v, i) { return x(i) + "," + y(v); }).join(" ");
+      let out = '<polyline points="' + pts + '" fill="none" style="stroke:' + color + ';stroke-width:3;stroke-linejoin:round' +
+        (dash ? ';stroke-dasharray:7 5' : '') + '"/>';
+      if (years <= 15) {
+        cum.forEach(function (v, i) {
+          out += '<circle cx="' + x(i) + '" cy="' + y(v) + '" r="3.5" style="fill:' + color + '"/>';
+        });
+      }
+      return out;
+    }
+    s += line(cumA, "var(--a)", false);
+    s += line(cumB, "var(--b)", true);
+
+    // Точка, где расходы сравниваются
+    if (be !== null && be <= years) {
+      const annualA = cumA[1] - cumA[0];
+      const cx = x(be), cy = y(cumA[0] + annualA * be);
+      const anchor = cx > W - 110 ? "end" : cx < L + 90 ? "start" : "middle";
+      s += '<line x1="' + cx + '" x2="' + cx + '" y1="' + cy + '" y2="' + (H - B) + '" style="stroke:var(--muted);stroke-dasharray:3 4"/>';
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="7" style="fill:var(--surface);stroke:var(--ink);stroke-width:2.5"/>';
+      s += '<text x="' + cx + '" y="' + (cy - 18) + '" text-anchor="' + anchor + '" font-weight="600" style="fill:var(--ink);stroke:var(--surface);stroke-width:5px;paint-order:stroke">' +
+        esc(dict(lang).equalAt(formatYears(be, lang))) + '</text>';
+    }
+
+    return s + '</svg>';
+  }
+
+  function setText(id, text) { $(id).textContent = text; }
+
+  // Выводит все результаты на страницу
+  function render(v, nameA, nameB, animate) {
+    const years = v.years;
+    const a = calculateTCO({ price: v["a-price"], energy: v["a-energy"], maintenance: v["a-maintenance"] }, v.tariff, years);
+    const b = calculateTCO({ price: v["b-price"], energy: v["b-energy"], maintenance: v["b-maintenance"] }, v.tariff, years);
+    const expl = buildExplanation(a, b, nameA, nameB, years, lang);
+
+    setText("verdict", expl.headline);
+
+    [["a", a, nameA], ["b", b, nameB]].forEach(function (p) {
+      const k = p[0], tco = p[1];
+      setText("r-" + k + "-name", p[2]);
+      setText("r-" + k + "-total", formatSum(tco.total, lang));
+      setText("r-" + k + "-purchase", formatSum(tco.purchase, lang));
+      setText("r-" + k + "-energy", formatSum(tco.energy, lang));
+      setText("r-" + k + "-maint", formatSum(tco.maintenance, lang));
+      setText("r-" + k + "-annual", formatSum(tco.annual, lang));
+    });
+
+    const stack = $("stack");
+    stack.replaceChildren();
+    const maxTotal = Math.max(a.total, b.total);
+    stack.append(stackRow(nameA, a, maxTotal, animate), stackRow(nameB, b, maxTotal, animate));
+
+    const cumA = cumulativeCosts(a, years);
+    const cumB = cumulativeCosts(b, years);
+    setText("legend-a", nameA);
+    setText("legend-b", nameB);
+    $("chart").innerHTML = buildChart(cumA, cumB, breakEven(a, b), $("chart").clientWidth);
+
+    setText("th-a", nameA);
+    setText("th-b", nameB);
+    const body = $("year-body");
+    body.replaceChildren();
+    cumA.forEach(function (va, i) {
+      const tr = el("tr");
+      tr.append(
+        el("td", "", i === 0 ? t("year0") : String(i)),
+        el("td", "", formatSum(va, lang)),
+        el("td", "", formatSum(cumB[i], lang)),
+        el("td", "", formatSum(va - cumB[i], lang))
+      );
+      body.appendChild(tr);
+    });
+
+    const list = $("explain");
+    list.replaceChildren();
+    expl.points.forEach(function (p) { list.appendChild(el("li", "", p)); });
+  }
+
+  /* ---------- Режим аналитика ---------- */
+
+  const analyst = $("analyst");
+  let lastData = null;  // последние верные данные формы — чтобы ползунки пересчитывали без проверки формы
+  let activePreset = null;  // id выбранного готового примера (или null)
+  let analystSnap = null;   // итоги режима аналитика — для печатного отчёта
+  const SALVAGE_IDS = ["a-salvage", "b-salvage"];
+
+  function sliderRate(id) { return Number($(id).value) / 100; }
+  function pctText(rate) { return dict(lang).anx.percent(formatNumber(rate * 100, lang, 1)); }
+
+  function updateSliderOutputs() {
+    $("growth-out").textContent = pctText(sliderRate("growth"));
+    $("discount-out").textContent = pctText(sliderRate("discount"));
+    $("mgrowth-out").textContent = pctText(sliderRate("mgrowth"));
+    $("mgrowth").setAttribute("aria-valuetext", pctText(sliderRate("mgrowth")));
+    $("growth").setAttribute("aria-valuetext", pctText(sliderRate("growth")));
+    $("discount").setAttribute("aria-valuetext", pctText(sliderRate("discount")));
+  }
+
+  // Кто выгоднее: 0 — A, 1 — B, null — разница меньше 1 % (почти равны)
+  function winnerOf(totA, totB) {
+    if (Math.abs(totA - totB) < 0.01 * Math.max(totA, totB)) return null;
+    return totA < totB ? 0 : 1;
+  }
+
+  function formatTariff(r) {
+    return r < 100 ? formatNumber(r, lang, 1) + "\u00A0" + dict(lang).currency : formatSum(r, lang);
+  }
+
+  // График: насколько A выгоднее B при разных тарифах (в сегодняшних деньгах)
+  function buildSensChart(A, B, years, g, d, h, current, thr, names, width) {
+    const ax = dict(lang).anx;
+    const q = dict(lang).quote;
+    const W = Math.max(320, Math.min(720, Math.round(width || 640)));
+    const H = W < 480 ? 260 : 300, L = W < 480 ? 58 : 76, R = 20, T = 32, B2 = 44;
+    const adv = function (rate) { return calculateNPV(B, rate, years, g, d, h).total - calculateNPV(A, rate, years, g, d, h).total; };
+
+    const xMaxRaw = Math.max(current * 2, thr ? thr * 1.6 : 0, 1);
+    const xStep = niceStep(xMaxRaw / 4);
+    const xMax = Math.ceil(xMaxRaw / xStep) * xStep;
+    const y0 = adv(0), y1 = adv(xMax);
+    let lo = Math.min(y0, y1, 0), hi = Math.max(y0, y1, 0);
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const yStep = niceStep((hi - lo) / 4);
+    lo = Math.floor(lo / yStep) * yStep;
+    hi = Math.ceil(hi / yStep) * yStep;
+    const x = function (v) { return L + v / xMax * (W - L - R); };
+    const y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - B2); };
+    const anchorAt = function (px) { return px > W - 110 ? "end" : px < L + 70 ? "start" : "middle"; };
+    const halo = ';stroke:var(--hero-bg);stroke-width:5px;paint-order:stroke';
+
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" font-size="13">';
+
+    for (let v = lo; v <= hi + yStep / 2; v += yStep) {
+      const zero = Math.abs(v) < yStep / 1000;
+      s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" style="stroke:' +
+        (zero ? 'var(--muted);stroke-width:1.5' : 'var(--line)') + '"/>';
+      s += '<text x="' + (L - 10) + '" y="' + (y(v) + 4) + '" text-anchor="end" style="fill:var(--muted)">' +
+        (zero ? "0" : esc(formatCompact(v, lang))) + '</text>';
+    }
+    for (let v = 0; v <= xMax + xStep / 2; v += xStep) {
+      s += '<text x="' + x(v) + '" y="' + (H - B2 + 22) + '" text-anchor="middle" style="fill:var(--muted)">' + esc(formatNumber(v, lang)) + '</text>';
+    }
+    s += '<text x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end" style="fill:var(--muted)">' + esc(ax.axisTariff(dict(lang).currency)) + '</text>';
+
+    // Подписи областей
+    if (hi > 0) s += '<text x="' + (L + 10) + '" y="' + (T + 14) + '" font-weight="600" style="fill:var(--a)' + halo + '">↑ ' + esc(ax.regionBetter(q(names[0]))) + '</text>';
+    if (lo < 0) s += '<text x="' + (L + 10) + '" y="' + (H - B2 - 10) + '" font-weight="600" style="fill:var(--b)' + halo + '">↓ ' + esc(ax.regionBetter(q(names[1]))) + '</text>';
+
+    // Ваш тариф
+    const cx = x(Math.min(current, xMax));
+    s += '<line x1="' + cx + '" x2="' + cx + '" y1="' + T + '" y2="' + (H - B2) + '" style="stroke:var(--muted);stroke-dasharray:3 4"/>';
+    s += '<text x="' + cx + '" y="' + (T - 10) + '" text-anchor="' + anchorAt(cx) + '" style="fill:var(--ink)">' + esc(dict(lang).an_markCurrent) + '</text>';
+
+    // Линия выгоды
+    s += '<line x1="' + x(0) + '" y1="' + y(y0) + '" x2="' + x(xMax) + '" y2="' + y(y1) + '" style="stroke:#E8B33A;stroke-width:3;stroke-linecap:round"/>';
+    s += '<circle cx="' + cx + '" cy="' + y(adv(Math.min(current, xMax))) + '" r="5" style="fill:var(--ink)"/>';
+
+    // Порог
+    if (thr && thr <= xMax) {
+      const tx = x(thr), ty = y(0);
+      const ly = (ty + 24 > H - B2 - 4) ? ty - 14 : ty + 24;
+      s += '<circle cx="' + tx + '" cy="' + ty + '" r="7" style="fill:var(--hero-bg);stroke:#E8B33A;stroke-width:2.5"/>';
+      s += '<text x="' + tx + '" y="' + ly + '" text-anchor="' + anchorAt(tx) + '" font-weight="600" style="fill:#E8B33A' + halo + '">' +
+        esc(dict(lang).an_markThreshold + ": " + formatTariff(thr)) + '</text>';
+    }
+    return s + '</svg>';
+  }
+
+  // Заполняет выпадающие списки на текущем языке, сохраняя выбор
+  function populateSelects() {
+    const d = dict(lang);
+    ["a", "b"].forEach(function (k) {
+      const term = $(k + "-term"), life = $(k + "-life");
+      const termVal = term.value || "0", lifeVal = life.value || "0";
+      term.replaceChildren();
+      TERMS.forEach(function (m) {
+        const o = el("option", "", m === 0 ? d.an_cash : d.anx.months(m));
+        o.value = String(m);
+        term.appendChild(o);
+      });
+      life.replaceChildren();
+      const none = el("option", "", d.an_lifeNone);
+      none.value = "0";
+      life.appendChild(none);
+      for (let y = 1; y <= 30; y++) {
+        const o = el("option", "", y + "\u00A0" + d.yearsWord(y));
+        o.value = String(y);
+        life.appendChild(o);
+      }
+      term.value = termVal;
+      life.value = lifeVal;
+    });
+  }
+
+  // Рассрочка товара из полей режима аналитика (или null — покупка сразу)
+  function creditOf(k) {
+    const months = Number($(k + "-term").value);
+    return months > 0 ? { rate: Number($(k + "-rate").value) / 100, months: months } : null;
+  }
+
+  function updateCreditUI() {
+    ["a", "b"].forEach(function (k) {
+      const c = creditOf(k);
+      $(k + "-rate-row").hidden = !c;
+      $(k + "-rate-out").textContent = pctText(Number($(k + "-rate").value) / 100);
+      $(k + "-rate").setAttribute("aria-valuetext", $(k + "-rate-out").textContent);
+      if (c && lastData) {
+        const price = lastData.values[k + "-price"];
+        const pmt = loanPayment(price, c.rate, c.months);
+        $(k + "-credit-info").textContent = dict(lang).anx.creditInfo(formatSum(pmt, lang), formatSum(pmt * c.months - price, lang));
+      } else {
+        $(k + "-credit-info").textContent = "";
+      }
+    });
+  }
+
+  // Цена перепродажи из поля режима аналитика. Пусто — 0; неверное значение считается как 0 и даёт ошибку.
+  function readSalvage(k) {
+    const n = parseNumber($(k + "-salvage").value, lang);
+    if (n === null) return { value: 0, error: null };
+    if (Number.isNaN(n)) return { value: 0, error: "err_nan" };
+    if (n < 0) return { value: 0, error: "err_negative" };
+    if (lastData && n > lastData.values[k + "-price"]) return { value: 0, error: "err_salvage_big" };
+    return { value: n, error: null };
+  }
+
+  function salvageOf(k) {
+    const r = readSalvage(k);
+    setFieldError(k + "-salvage", r.error);
+    return r.value;
+  }
+
+  function renderAnalyst() {
+    updateCreditUI();
+    if (!lastData) return;
+    const v = lastData.values;
+    const names = [lastData.nameA, lastData.nameB];
+    const d = dict(lang), ax = d.anx, q = d.quote;
+    const g = sliderRate("growth"), r = sliderRate("discount"), h = sliderRate("mgrowth");
+    const sA = salvageOf("a"), sB = salvageOf("b");
+    const hasSalvage = sA > 0 || sB > 0;
+    const cashA = { price: v["a-price"], energy: v["a-energy"], maintenance: v["a-maintenance"] };
+    const cashB = { price: v["b-price"], energy: v["b-energy"], maintenance: v["b-maintenance"] };
+    const A0 = Object.assign({}, cashA, { credit: creditOf("a") });     // без перепродажи
+    const B0 = Object.assign({}, cashB, { credit: creditOf("b") });
+    const A = Object.assign({}, A0, { salvage: sA });                   // полная модель
+    const B = Object.assign({}, B0, { salvage: sB });
+    const hasCredit = !!(A.credit || B.credit);
+    const Y = v.years, R = v.tariff;
+    const gs = pctText(g), ds = pctText(r), hs = pctText(h);
+
+    setText("an-a-legend", names[0]);
+    setText("an-b-legend", names[1]);
+
+    // Вывод: базовая модель против полной (рост цен + дисконт + рассрочка + перепродажа)
+    const baseA = calculateNPV(cashA, R, Y, 0, 0, 0).total, baseB = calculateNPV(cashB, R, Y, 0, 0, 0).total;
+    const npvA = calculateNPV(A, R, Y, g, r, h).total, npvB = calculateNPV(B, R, Y, g, r, h).total;
+    const wBase = winnerOf(baseA, baseB), wNpv = winnerOf(npvA, npvB);
+    const cond = ax.cond(gs, ds, { credit: hasCredit, mg: h > 0 ? hs : null, salvage: hasSalvage });
+    const isActive = g > 0 || r > 0 || h > 0 || hasCredit || hasSalvage;
+    let verdict;
+    if (!isActive) verdict = ax.noChange();
+    else if (wNpv === null) verdict = ax.equal(cond);
+    else if (wNpv === wBase) verdict = ax.same(cond, q(names[wNpv]), formatSum(Math.abs(npvA - npvB), lang));
+    else verdict = ax.changed(cond, q(names[wNpv]), formatSum(Math.abs(npvA - npvB), lang));
+    setText("an-verdict", verdict);
+
+    // Порог тарифа
+    const thr = thresholdTariff(A, B, Y, g, r, h);
+    if (A.energy === B.energy) {
+      setText("an-thr-value", "—");
+      setText("an-thr-desc", ax.thresholdNone());
+    } else if (thr === null) {
+      setText("an-thr-value", "—");
+      setText("an-thr-desc", ax.thresholdAlways(q(names[npvA <= npvB ? 0 : 1])));
+    } else {
+      const saver = A.energy < B.energy ? 0 : 1;
+      setText("an-thr-value", ax.thresholdValue(formatTariff(thr)));
+      setText("an-thr-desc", ax.thresholdDesc(q(names[saver]), q(names[1 - saver])));
+    }
+
+    // Окупаемость (без перепродажи: цена перепродажи известна только на конец срока)
+    const buyA = purchasePV(A, r), buyB = purchasePV(B, r);
+    const pb = paybackYears(A, B, R, g, r, 30, h);
+    if (Math.abs(buyA - buyB) < 0.5) {
+      setText("an-pb-value", "—");
+      setText("an-pb-desc", ax.paybackSamePrice());
+    } else if (pb !== null) {
+      setText("an-pb-value", "≈ " + formatYears(pb, lang));
+      setText("an-pb-desc", ax.paybackDesc());
+    } else {
+      const cheapBuy = buyA < buyB ? 0 : 1;
+      const runA = A.energy * R + A.maintenance, runB = B.energy * R + B.maintenance;
+      const cheapRun = runA <= runB ? 0 : 1;
+      setText("an-pb-value", "—");
+      setText("an-pb-desc", cheapBuy === cheapRun ? ax.paybackNotNeeded(q(names[cheapBuy])) : ax.paybackNever());
+    }
+
+    // Сценарии: каждое допущение добавляется по шагам
+    setText("an-th-a", names[0]);
+    setText("an-th-b", names[1]);
+    const body = $("an-scen-body");
+    body.replaceChildren();
+    const rows = [[ax.scenBase(), cashA, cashB, 0, 0, 0]];
+    if (hasCredit) rows.push([ax.scenCredit(), A0, B0, 0, 0, 0]);
+    rows.push([ax.scenGrowth(gs), A0, B0, g, 0, 0]);
+    if (h > 0) rows.push([ax.scenMaint(hs), A0, B0, g, 0, h]);
+    if (hasSalvage) rows.push([ax.scenSalvage(), A, B, g, 0, h]);
+    rows.push([ax.scenNPV(ds), A, B, g, r, h]);
+    rows.forEach(function (row) {
+      const ta = calculateNPV(row[1], R, Y, row[3], row[4], row[5]).total;
+      const tb = calculateNPV(row[2], R, Y, row[3], row[4], row[5]).total;
+      const w = winnerOf(ta, tb);
+      const tr = el("tr");
+      const cells = [
+        el("td", "scen-name", row[0]),
+        el("td", "", formatSum(ta, lang)),
+        el("td", "", formatSum(tb, lang)),
+        el("td", "", w === null ? d.an_almostEqual : names[w])
+      ];
+      // подписи для мобильной версии (там таблица превращается в карточки)
+      [null, names[0], names[1], d.an_thBetter].forEach(function (label, i) { if (label) cells[i].dataset.label = label; });
+      tr.append.apply(tr, cells);
+      body.appendChild(tr);
+    });
+
+    // Разный срок службы: EAC
+    const lifeA = Number($("a-life").value), lifeB = Number($("b-life").value);
+    const showEac = lifeA > 0 && lifeB > 0;
+    let eacPair = null;
+    $("eac-hint").hidden = showEac;
+    $("eac-result").hidden = !showEac;
+    if (showEac) {
+      const eacA = calculateEAC(A, R, lifeA, g, r, h), eacB = calculateEAC(B, R, lifeB, g, r, h);
+      eacPair = { a: eacA, b: eacB };
+      setText("eac-a-name", names[0]);
+      setText("eac-b-name", names[1]);
+      setText("eac-a-value", ax.eacValue(formatSum(eacA, lang)));
+      setText("eac-b-value", ax.eacValue(formatSum(eacB, lang)));
+      setText("eac-a-desc", ax.eacDesc(lifeA + " " + d.yearsWord(lifeA)));
+      setText("eac-b-desc", ax.eacDesc(lifeB + " " + d.yearsWord(lifeB)));
+      const w = winnerOf(eacA, eacB);
+      setText("eac-verdict", w === null ? ax.eacEqual() : ax.eacVerdict(q(names[w]), formatSum(Math.abs(eacA - eacB), lang)));
+    }
+
+    $("sens-chart").innerHTML = buildSensChart(A, B, Y, g, r, h, R, thr, names, $("sens-chart").clientWidth);
+
+    analystSnap = { g: g, h: h, r: r, active: isActive, hasCredit: hasCredit, hasSalvage: hasSalvage,
+                    sA: sA, sB: sB, npvA: npvA, npvB: npvB, eac: eacPair };
+    renderPrintReport();
+  }
+
+  /* ---------- Печатный отчёт: одна страница A4 ----------
+     Строится из тех же чисел, что и экран, но отдельным блоком #print-report.
+     При печати остальная страница скрывается (см. CSS @media print). */
+
+  function renderPrintReport() {
+    const host = $("print-report");
+    if (!host) return;
+    if (!lastData || !analystSnap) {
+      host.replaceChildren();
+      document.body.classList.remove("has-report");
+      return;
+    }
+    const v = lastData.values, d = dict(lang), ax = d.anx;
+    const names = [lastData.nameA, lastData.nameB];
+    const Y = v.years, R = v.tariff, snap = analystSnap;
+    const sum = function (x) { return formatSum(x, lang); };
+    const a = calculateTCO({ price: v["a-price"], energy: v["a-energy"], maintenance: v["a-maintenance"] }, R, Y);
+    const b = calculateTCO({ price: v["b-price"], energy: v["b-energy"], maintenance: v["b-maintenance"] }, R, Y);
+    const expl = buildExplanation(a, b, names[0], names[1], Y, lang);
+    const cumA = cumulativeCosts(a, Y), cumB = cumulativeCosts(b, Y);
+    const be = breakEven(a, b);
+    const optText = function (id) { const sel = $(id); return sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : ""; };
+    const now = new Date();
+    const pad = function (n) { return (n < 10 ? "0" : "") + n; };
+    const dateText = pad(now.getDate()) + "." + pad(now.getMonth() + 1) + "." + now.getFullYear();
+    let url = "";
+    try { url = location.origin + location.pathname; } catch (e) { url = ""; }
+    if (!/^https?:/.test(url)) url = "";
+
+    const root = el("div");
+
+    // Шапка
+    const head = el("div", "pr-head");
+    const left = el("div");
+    left.append(el("div", "pr-brand", "SmartChoice Analytics"), el("p", "pr-title", d.pr_title), el("p", "pr-sub", names[0] + " vs " + names[1]));
+    const meta = el("div", "pr-meta");
+    meta.append(el("div", "", d.printDate + ": " + dateText));
+    if (url) meta.append(el("div", "", url));
+    head.append(left, meta);
+    root.appendChild(head);
+
+    // Финансовый вывод
+    const box = el("div", "pr-box");
+    box.append(el("h2", "", d.pr_conclusion), el("p", "pr-verdict", expl.headline));
+    if (snap.active) box.append(el("p", "pr-verdict2", $("an-verdict").textContent));
+    const params = [d.tariffLabel + ": " + sum(R), d.pr_period + ": " + Y + " " + d.yearsWord(Y)];
+    if (snap.active) {
+      params.push(d.an_growth + ": " + pctText(snap.g));
+      params.push(d.an_mgrowth + ": " + pctText(snap.h));
+      params.push(d.an_discount + ": " + pctText(snap.r));
+    }
+    box.append(el("p", "pr-params", params.join(" · ")));
+    if (activePreset && d.presets && d.presets[activePreset]) {
+      box.append(el("p", "pr-params", d.presetCase + ": " + d.presets[activePreset].label));
+    }
+    root.appendChild(box);
+
+    // Сводка и ключевые показатели
+    const grid = el("div", "pr-grid");
+
+    const sec1 = el("div", "pr-section");
+    sec1.appendChild(el("h3", "", d.pr_summary));
+    const t1 = el("table", "pr-table");
+    const th1 = el("thead"), hr1 = el("tr");
+    hr1.append(el("th", "", ""), el("th", "", names[0]), el("th", "", names[1]));
+    th1.appendChild(hr1);
+    const tb1 = el("tbody");
+    const group = function (text) {
+      const tr = el("tr", "pr-group"), td = el("td", "", text);
+      td.colSpan = 3;
+      tr.appendChild(td);
+      tb1.appendChild(tr);
+    };
+    const row = function (label, x, y, cls) {
+      const tr = el("tr", cls || "");
+      tr.append(el("td", "", label), el("td", "", x), el("td", "", y));
+      tb1.appendChild(tr);
+    };
+    group(d.printSummary);
+    row(d.priceLabel, sum(v["a-price"]), sum(v["b-price"]));
+    row(d.energyLabel, formatNumber(v["a-energy"], lang, 2) + " " + d.unitKwh, formatNumber(v["b-energy"], lang, 2) + " " + d.unitKwh);
+    row(d.maintLabel, sum(v["a-maintenance"]), sum(v["b-maintenance"]));
+    if (snap.hasCredit) row(d.an_payMethod, optText("a-term"), optText("b-term"));
+    if (snap.hasSalvage) row(d.pr_resale, sum(snap.sA), sum(snap.sB));
+    group(d.pr_results);
+    row(d.bdEnergy, sum(a.energy), sum(b.energy));
+    row(d.bdMaint, sum(a.maintenance), sum(b.maintenance));
+    row(d.pr_tco, sum(a.total), sum(b.total), "pr-total");
+    row(d.bdAnnual, sum(a.annual), sum(b.annual));
+    if (snap.active) row(d.pr_npv, sum(snap.npvA), sum(snap.npvB), "pr-total");
+    if (snap.eac) row(d.pr_eac, sum(snap.eac.a), sum(snap.eac.b));
+    t1.append(th1, tb1);
+    sec1.appendChild(t1);
+
+    const sec2 = el("div", "pr-section");
+    sec2.appendChild(el("h3", "", d.pr_metrics));
+    const t2 = el("table", "pr-table");
+    const tb2 = el("tbody");
+    const kv = function (label, value) {
+      const tr = el("tr", "pr-kv");
+      tr.append(el("td", "", label), el("td", "", value));
+      tb2.appendChild(tr);
+    };
+    kv(d.thDiff + " · TCO", sum(a.total - b.total));
+    if (snap.active) kv(d.thDiff + " · NPV", sum(snap.npvA - snap.npvB));
+    kv(d.pr_breakeven, be !== null ? formatYears(be, lang) : "—");
+    kv(d.an_threshold, $("an-thr-value").textContent);
+    kv(d.an_payback, $("an-pb-value").textContent);
+    t2.appendChild(tb2);
+    sec2.appendChild(t2);
+    grid.append(sec1, sec2);
+    root.appendChild(grid);
+
+    // График накопленных расходов
+    const chart = el("div", "pr-chart pr-section");
+    chart.appendChild(el("h3", "", d.chartTitle));
+    const legend = el("ul", "pr-legend");
+    [["a", names[0], ""], ["b", names[1], "stroke-dasharray:7 5;"]].forEach(function (p) {
+      const li = el("li");
+      li.innerHTML = '<svg width="32" height="10" aria-hidden="true"><line x1="0" y1="5" x2="32" y2="5" style="stroke:var(--' + p[0] + ');stroke-width:3;' + p[2] + '"/></svg>';
+      li.appendChild(el("span", "", p[1]));
+      legend.appendChild(li);
+    });
+    const svgBox = el("div");
+    svgBox.innerHTML = buildChart(cumA, cumB, be, 720, 200);
+    chart.append(legend, svgBox);
+    root.appendChild(chart);
+
+    // Таблица по годам (годы — столбцами; при долгом сроке берём равномерные годы)
+    const idx = [];
+    const maxCols = 13;
+    if (Y + 1 <= maxCols) {
+      for (let i = 0; i <= Y; i++) idx.push(i);
+    } else {
+      const step = Math.ceil(Y / (maxCols - 1));
+      for (let i = 0; i < Y; i += step) idx.push(i);
+      idx.push(Y);
+    }
+    const dense = idx.length > 8;
+    const fmt = function (x) { return dense ? formatCompact(x, lang) : formatNumber(Math.round(x), lang); };
+    const yearsSec = el("div", "pr-years pr-section" + (dense ? " is-dense" : ""));
+    yearsSec.appendChild(el("h3", "", d.pr_yearsTable + ", " + d.currency));
+    const t3 = el("table", "pr-table");
+    const th3 = el("thead"), hr3 = el("tr");
+    hr3.appendChild(el("th", "", d.thYear));
+    idx.forEach(function (i) { hr3.appendChild(el("th", "", String(i))); });
+    th3.appendChild(hr3);
+    const tb3 = el("tbody");
+    [[names[0], cumA], [names[1], cumB]].forEach(function (p) {
+      const tr = el("tr");
+      tr.appendChild(el("td", "", p[0]));
+      idx.forEach(function (i) { tr.appendChild(el("td", "", fmt(p[1][i]))); });
+      tb3.appendChild(tr);
+    });
+    const trd = el("tr", "pr-total");
+    trd.appendChild(el("td", "", d.thDiff));
+    idx.forEach(function (i) { trd.appendChild(el("td", "", fmt(cumA[i] - cumB[i]))); });
+    tb3.appendChild(trd);
+    t3.append(th3, tb3);
+    yearsSec.appendChild(t3);
+    root.appendChild(yearsSec);
+
+    // Подвал: формулы и оговорка
+    const foot = el("div", "pr-foot");
+    foot.appendChild(el("p", "pr-formula", d.pr_formula + ":  TCO = P + (E × R × Y) + (M × Y)"));
+    if (snap.active) {
+      foot.appendChild(el("p", "pr-formula", "NPV = P + Σ (E·R·(1+g)^(k−1) + M·(1+h)^(k−1)) / (1+d)^k − S / (1+d)^Y"));
+    }
+    foot.appendChild(el("p", "", d.disclaimer));
+    root.appendChild(foot);
+
+    host.replaceChildren(root);
+    document.body.classList.add("has-report");
+    fitPrintReport(root);
+  }
+
+  // Страница A4 с полями 10 мм: 186 × 277 мм. Если отчёт получился выше страницы
+  // (длинные названия, много строк), слегка уменьшаем его — так он всегда остаётся на одной странице.
+  function fitPrintReport(root) {
+    const host = $("print-report");
+    root.style.zoom = "";
+    const saved = host.getAttribute("style");
+    host.style.cssText = "display:block;position:absolute;left:-10000px;top:0;visibility:hidden;width:" + Math.round(186 / 25.4 * 96) + "px";
+    const h = root.getBoundingClientRect().height;
+    if (saved === null) host.removeAttribute("style"); else host.setAttribute("style", saved);
+    const avail = 277 / 25.4 * 96 * 0.95;   // 5 % запаса: в печати переносы строк чуть отличаются от экрана
+    if (h > avail) root.style.zoom = String(Math.max(0.55, avail / h));
+  }
+
+  // Проверить форму и, если всё верно, посчитать
+  function run(showErrors, animate) {
+    const res = readForm(showErrors);
+    if (!res.ok) {
+      if (showErrors) {
+        lastInvalidCount = res.invalid.length;
+        formError.textContent = dict(lang).formErrors(lastInvalidCount);
+        formError.hidden = false;
+        $(res.invalid[0]).focus();
+      } else {
+        staleNote.hidden = false;
+      }
+      return false;
+    }
+    formError.hidden = true;
+    staleNote.hidden = true;
+    results.hidden = false;
+    analyst.hidden = false;
+    $("nav-results-item").hidden = false;
+    lastData = { values: res.values, nameA: productName("a-name", "productA"), nameB: productName("b-name", "productB") };
+    render(lastData.values, lastData.nameA, lastData.nameB, animate);
+    renderAnalyst();
+    return true;
+  }
+
+  function scrollToResults() {
+    results.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    $("verdict").focus({ preventScroll: true });
+  }
+
+  /* ---------- Меню ---------- */
+
+  const nav = $("topnav");
+  const navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav-links a"));
+
+  // Высота меню нужна, чтобы при переходе к разделу заголовок не прятался под ним
+  function updateNavHeight() {
+    document.documentElement.style.setProperty("--nav-h", nav.offsetHeight + "px");
+  }
+
+  navLinks.forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      const target = document.querySelector(a.getAttribute("href"));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    });
+  });
+
+  // Подсветка текущего раздела в меню
+  let navTicking = false;
+  function updateActiveNav() {
+    navTicking = false;
+    const line = nav.offsetHeight + 40;
+    let current = null;
+    const visible = navLinks.filter(function (a) {
+      const sec = document.querySelector(a.getAttribute("href"));
+      return sec && !sec.hidden && sec.offsetParent !== null;
+    });
+    visible.forEach(function (a) {
+      if (document.querySelector(a.getAttribute("href")).getBoundingClientRect().top <= line) current = a;
+    });
+    // В самом низу страницы последний раздел не может подняться наверх — подсвечиваем его
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4 && visible.length) {
+      current = visible[visible.length - 1];
+    }
+    navLinks.forEach(function (a) {
+      if (a === current) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
+  }
+  window.addEventListener("scroll", function () {
+    if (!navTicking) { navTicking = true; requestAnimationFrame(updateActiveNav); }
+  }, { passive: true });
+
+  /* ---------- Поделиться и PDF ---------- */
+
+  function collectState() {
+    const v = lastData.values;
+    const prod = function (k) {
+      const c = creditOf(k);
+      return {
+        name: $(k + "-name").value.trim().slice(0, 40),
+        price: v[k + "-price"], energy: v[k + "-energy"], maintenance: v[k + "-maintenance"],
+        term: c ? c.months : 0, rate: c ? Number($(k + "-rate").value) : 0,
+        life: Number($(k + "-life").value),
+        salvage: readSalvage(k).value
+      };
+    };
+    return {
+      tariff: v.tariff, years: v.years, a: prod("a"), b: prod("b"),
+      g: Number($("growth").value), h: Number($("mgrowth").value), d: Number($("discount").value), lang: lang
+    };
+  }
+
+  function shareResult() {
+    if (!lastData) return;
+    const url = location.href.split("#")[0] + "#" + encodeShare(collectState());
+    const status = $("share-status"), field = $("share-url");
+    field.hidden = true;
+    status.textContent = "";
+
+    function showManual() {
+      status.textContent = t("shareManual");
+      field.value = url;
+      field.hidden = false;
+      field.focus();
+      field.select();
+    }
+    function copy() {
+      if (!navigator.clipboard) { showManual(); return; }
+      navigator.clipboard.writeText(url).then(function () { status.textContent = t("shareCopied"); }, showManual);
+    }
+
+    // На телефоне — системное меню «Поделиться» (Telegram и др.), на компьютере — копирование
+    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+      navigator.share({ title: t("shareText"), url: url }).catch(function (e) {
+        if (!e || e.name !== "AbortError") copy();
+      });
+    } else {
+      copy();
+    }
+  }
+
+  $("share-btn").addEventListener("click", shareResult);
+  // Окно печати открывается не везде: во встроенных браузерах (например, в Telegram) и в песочнице
+  // предпросмотра файла window.print() молча ничего не делает. Признак того, что печать пошла, —
+  // событие beforeprint или переключение media query «print». Если их не было, показываем подсказку.
+  let printSignal = false;
+  try {
+    const printMq = window.matchMedia("print");
+    const onPrintMq = function (e) { if (e.matches) printSignal = true; };
+    if (printMq.addEventListener) printMq.addEventListener("change", onPrintMq);
+    else if (printMq.addListener) printMq.addListener(onPrintMq);
+  } catch (e) { /* не страшно */ }
+
+  // Печать через кнопку или Ctrl+P / меню браузера: отчёт обновляется перед печатью
+  window.addEventListener("beforeprint", function () {
+    printSignal = true;
+    try { renderPrintReport(); } catch (e) { /* не страшно */ }
+  });
+
+  $("print-btn").addEventListener("click", function () {
+    const status = $("share-status");
+    $("share-url").hidden = true;
+    status.textContent = "";
+    printSignal = false;
+    try {
+      renderPrintReport();
+      window.print();
+    } catch (e) {
+      status.textContent = t("printHelp");
+      return;
+    }
+    setTimeout(function () { if (!printSignal) status.textContent = t("printHelp"); }, 800);
+  });
+
+  // Заполняет форму данными из ссылки и считает
+  function applySharedState(st) {
+    $("tariff").value = st.tariff;
+    $("years").value = st.years;
+    ["a", "b"].forEach(function (k) {
+      const x = st[k];
+      $(k + "-name").value = x.name;
+      [["price", "-price"], ["energy", "-energy"], ["maintenance", "-maintenance"]].forEach(function (f) {
+        const n = parseNumber(x[f[0]], "en");
+        $(k + f[1]).value = (n !== null && !Number.isNaN(n)) ? formatNumber(n, lang, 2) : x[f[0]];
+      });
+      $(k + "-term").value = String(x.term);
+      $(k + "-rate").value = String(x.rate);
+      $(k + "-life").value = String(x.life);
+      const sv = parseNumber(x.salvage, "en");
+      $(k + "-salvage").value = (sv !== null && !Number.isNaN(sv) && sv > 0) ? formatNumber(sv, lang, 2) : "";
+    });
+    ["tariff", "years"].forEach(function (id) {
+      const n = parseNumber($(id).value, "en");
+      if (n !== null && !Number.isNaN(n)) $(id).value = formatNumber(n, lang, 2);
+    });
+    $("growth").value = String(st.g);
+    $("mgrowth").value = String(st.h);
+    $("discount").value = String(st.d);
+    updateSliderOutputs();
+    if (run(true, true)) {
+      $("shared-note").hidden = false;
+      setTimeout(scrollToResults, 50);
+    }
+  }
+
+  /* ---------- Автор ---------- */
+
+  function renderAuthor() {
+    const a = window.SC_AUTHOR || {};
+    const name = a.name || "";
+    setText("author-name", name);
+    setText("author-initials", name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (w) { return w.charAt(0); }).join("").toUpperCase());
+    setText("author-version", (a.version || "") + (a.year ? " · " + a.year : ""));
+    if (a.github) {
+      $("author-github").href = a.github;
+      $("author-github-wrap").hidden = false;
+    }
+    setText("footer-meta", "© " + (a.year || "") + " " + name + (a.version ? " · " + a.version : ""));
+  }
+
+  /* ---------- Язык ---------- */
+
+  // Переключает язык: тексты, числа в полях, ошибки и результаты
+  function setLang(next, initial) {
+    if (!I18N[next]) next = "ru";
+    const prev = lang;
+    lang = next;
+    const d = dict(lang);
+
+    document.documentElement.lang = d.htmlLang;
+    document.title = d.title;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", d.metaDesc);
+
+    document.querySelectorAll("[data-i18n]").forEach(function (node) {
+      node.textContent = d[node.dataset.i18n];
+    });
+    document.querySelectorAll("[data-i18n-ph]").forEach(function (node) {
+      node.setAttribute("placeholder", d[node.dataset.i18nPh]);
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach(function (node) {
+      node.setAttribute("aria-label", d[node.dataset.i18nAria]);
+    });
+    document.querySelectorAll(".lang-switch button").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", String(btn.dataset.lang === lang));
+    });
+
+    if (!initial && prev !== lang) {
+      // Числа в полях переписываем в формате нового языка: 4 000 000 ↔ 4,000,000
+      FIELD_IDS.concat(SALVAGE_IDS).forEach(function (id) {
+        const input = $(id);
+        const v = parseNumber(input.value, prev);
+        if (v !== null && !Number.isNaN(v) && v >= 0) input.value = formatNumber(v, lang, 2);
+      });
+      // Названия из готового примера тоже переводим
+      if (activePreset && dict(prev).presets && d.presets) {
+        const pp = dict(prev).presets[activePreset], np = d.presets[activePreset];
+        if ($("a-name").value === pp.nameA) $("a-name").value = np.nameA;
+        if ($("b-name").value === pp.nameB) $("b-name").value = np.nameB;
+      }
+      // Показанные ошибки — на новом языке
+      FIELD_IDS.concat(SALVAGE_IDS).forEach(function (id) {
+        if ($(id).dataset.errKey) setFieldError(id, $(id).dataset.errKey);
+      });
+      if (!formError.hidden) formError.textContent = d.formErrors(lastInvalidCount);
+      if (!results.hidden) run(false, false);
+    }
+
+    updateSliderOutputs();
+    populateSelects();
+    buildPresetButtons();
+    updatePresetState();
+    if ($("share-status").textContent) $("share-status").textContent = "";
+    updateNavHeight();
+    updateCreditUI();
+    if (lastData && !results.hidden) renderPrintReport();   // подписи списков уже на новом языке
+    document.documentElement.classList.remove("sc-lang-pending");
+    if (!initial) syncLangParam();
+
+    try { localStorage.setItem("smartchoice-lang", lang); } catch (e) { /* хранилище недоступно — не страшно */ }
+  }
+
+  // Язык из адреса: ?lang=en, ?lang=uz, ?lang=ru. Главнее сохранённого выбора и языка браузера.
+  function queryLang() {
+    try {
+      const raw = new URLSearchParams(location.search).get("lang");
+      if (!raw) return null;
+      const code = raw.trim().toLowerCase().slice(0, 2);
+      return I18N[code] ? code : null;
+    } catch (e) { return null; }
+  }
+
+  // Если язык задан в адресе, при переключении языка меняем и адрес (чтобы обновление страницы не вернуло старый язык)
+  function syncLangParam() {
+    try {
+      const u = new URL(location.href);
+      if (!u.searchParams.has("lang")) return;
+      u.searchParams.set("lang", lang);
+      history.replaceState(null, "", u.toString());
+    } catch (e) { /* адрес менять нельзя — ничего страшного */ }
+  }
+
+  function detectLang(shared) {
+    const forced = queryLang();
+    if (forced) return forced;
+    try {
+      const saved = localStorage.getItem("smartchoice-lang");
+      if (saved && I18N[saved]) return saved;
+    } catch (e) { /* хранилище недоступно */ }
+    if (shared && shared.lang && I18N[shared.lang]) return shared.lang;
+    const nav = (navigator.language || "ru").toLowerCase();
+    if (nav.indexOf("uz") === 0) return "uz";
+    if (nav.indexOf("en") === 0) return "en";
+    return "ru";
+  }
+
+  document.querySelectorAll(".lang-switch button").forEach(function (btn) {
+    btn.addEventListener("click", function () { setLang(btn.dataset.lang, false); });
+  });
+
+  /* ---------- Кнопки и поля ---------- */
+
+  // При повороте телефона или изменении окна перерисовываем график под новую ширину
+  let resizeTimer = null;
+  let lastWidth = window.innerWidth;
+  window.addEventListener("resize", function () {
+    if (results.hidden || window.innerWidth === lastWidth) return;
+    lastWidth = window.innerWidth;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { run(false, false); }, 150);
+  });
+
+  // Поля режима аналитика пересчитывают только его блок
+  ["growth", "mgrowth", "discount", "a-rate", "b-rate", "a-term", "b-term", "a-life", "b-life", "a-salvage", "b-salvage"].forEach(function (id) {
+    $(id).addEventListener("input", function () {
+      clearPreset();
+      updateSliderOutputs();
+      renderAnalyst();
+    });
+  });
+
+  // Цена перепродажи: после выхода из поля расставляем разделители, как в основных полях
+  SALVAGE_IDS.forEach(function (id) {
+    $(id).addEventListener("blur", function () {
+      const n = parseNumber(this.value, lang);
+      if (n !== null && !Number.isNaN(n) && n >= 0) this.value = formatNumber(n, lang, 2);
+    });
+  });
+
+  // Кнопка «Рассчитать»
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const wasHidden = results.hidden;
+    if (run(true, wasHidden)) scrollToResults();
+  });
+
+  // Когда пользователь меняет данные: убираем ошибку поля и пересчитываем, если результат уже показан
+  form.addEventListener("input", function (e) {
+    clearPreset();
+    if (FIELD_IDS.indexOf(e.target.id) !== -1) setFieldError(e.target.id, null);
+    if (!results.hidden) run(false, false);
+  });
+
+  // После выхода из поля красиво расставляем разделители: 4000000 → 4 000 000 (или 4,000,000)
+  FIELD_IDS.forEach(function (id) {
+    $(id).addEventListener("blur", function () {
+      const v = parseNumber(this.value, lang);
+      if (v !== null && !Number.isNaN(v) && v >= 0) this.value = formatNumber(v, lang, 2);
+    });
+  });
+
+  /* ---------- Готовые примеры ----------
+     Числа одинаковы для всех языков; названия и пояснения лежат в словаре (presets).
+     Цены — округлённые ориентиры, а не данные конкретных моделей. Подробности — в README. */
+  const PRESETS = {
+    ac: { tariff: 900, years: 7, g: 10, h: 8, d: 15,
+      a: { price: 3000000, energy: 1000, maintenance: 120000, salvage: 300000, life: 10 },
+      b: { price: 4300000, energy: 600, maintenance: 150000, salvage: 500000, life: 10 } },
+    car: { tariff: 1100, years: 5, g: 10, h: 8, d: 15,
+      a: { price: 190000000, energy: 0, maintenance: 16000000, salvage: 115000000, life: 0 },
+      b: { price: 240000000, energy: 2250, maintenance: 1500000, salvage: 100000000, life: 0 } },
+    fridge: { tariff: 900, years: 10, g: 10, h: 8, d: 15,
+      a: { price: 4800000, energy: 360, maintenance: 0, salvage: 300000, life: 12 },
+      b: { price: 7200000, energy: 170, maintenance: 0, salvage: 500000, life: 14 } },
+    led: { tariff: 900, years: 5, g: 10, h: 8, d: 15,
+      a: { price: 30000, energy: 876, maintenance: 30000, salvage: 0, life: 0 },
+      b: { price: 250000, energy: 131, maintenance: 0, salvage: 0, life: 0 } }
+  };
+  const PRESET_ORDER = ["ac", "car", "fridge", "led"];
+
+  // Кнопки примеров на текущем языке (при смене языка строятся заново)
+  function buildPresetButtons() {
+    const d = dict(lang), grid = $("preset-grid");
+    grid.replaceChildren();
+    PRESET_ORDER.forEach(function (id) {
+      const p = d.presets[id];
+      const btn = el("button", "preset-btn");
+      btn.type = "button";
+      btn.dataset.preset = id;
+      btn.append(el("span", "preset-title", p.label), el("span", "preset-meta", p.meta));
+      btn.addEventListener("click", function () { applyPreset(id); });
+      grid.appendChild(btn);
+    });
+  }
+
+  // Подсвечивает выбранный пример и показывает его пояснение (над формой и над результатом)
+  function updatePresetState() {
+    const d = dict(lang);
+    document.querySelectorAll(".preset-btn").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", String(btn.dataset.preset === activePreset));
+    });
+    const text = activePreset ? d.presets[activePreset].label + ". " + d.presets[activePreset].note : "";
+    ["preset-note", "case-note"].forEach(function (id) {
+      $(id).textContent = text;
+      $(id).hidden = !activePreset;
+    });
+  }
+
+  // Любая ручная правка данных снимает пометку «это готовый пример»: пояснение уже не про эти числа
+  function clearPreset() {
+    if (!activePreset) return;
+    activePreset = null;
+    updatePresetState();
+  }
+
+  function applyPreset(id) {
+    const P = PRESETS[id];
+    if (!P) return;
+    const pn = dict(lang).presets[id];
+    const put = function (field, n) { $(field).value = formatNumber(n, lang); };
+    put("tariff", P.tariff);
+    put("years", P.years);
+    ["a", "b"].forEach(function (k) {
+      const x = P[k];
+      put(k + "-price", x.price);
+      put(k + "-energy", x.energy);
+      put(k + "-maintenance", x.maintenance);
+      $(k + "-name").value = k === "a" ? pn.nameA : pn.nameB;
+      $(k + "-term").value = "0";
+      $(k + "-rate").value = "0";
+      $(k + "-life").value = String(x.life || 0);
+      $(k + "-salvage").value = x.salvage ? formatNumber(x.salvage, lang) : "";
+    });
+    $("growth").value = String(P.g);
+    $("mgrowth").value = String(P.h);
+    $("discount").value = String(P.d);
+    activePreset = id;
+    FIELD_IDS.concat(SALVAGE_IDS).forEach(function (fid) { setFieldError(fid, null); });
+    updateSliderOutputs();
+    updatePresetState();
+    const wasHidden = results.hidden;
+    if (run(true, wasHidden)) scrollToResults();
+  }
+
+  // Кнопка «Очистить»
+  $("clear-btn").addEventListener("click", function () {
+    form.reset();
+    FIELD_IDS.forEach(function (id) { setFieldError(id, null); });
+    formError.hidden = true;
+    results.hidden = true;
+    analyst.hidden = true;
+    $("nav-results-item").hidden = true;
+    $("shared-note").hidden = true;
+    $("share-status").textContent = "";
+    $("share-url").hidden = true;
+    lastData = null;
+    $("growth").value = "0";
+    $("mgrowth").value = "0";
+    $("discount").value = "0";
+    ["a", "b"].forEach(function (k) {
+      $(k + "-term").value = "0";
+      $(k + "-rate").value = "0";
+      $(k + "-life").value = "0";
+      $(k + "-salvage").value = "";
+      setFieldError(k + "-salvage", null);
+    });
+    activePreset = null;
+    analystSnap = null;
+    updatePresetState();
+    renderPrintReport();
+    updateCreditUI();
+    updateSliderOutputs();
+    $("tariff").focus();
+  });
+
+  // Кнопка «Изменить данные»
+  $("edit-data").addEventListener("click", function () {
+    form.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    $("a-price").focus({ preventScroll: true });
+  });
+
+  const sharedState = decodeShare(location.hash);
+  renderAuthor();
+  setLang(detectLang(sharedState), true);
+  updateNavHeight();
+  window.addEventListener("resize", updateNavHeight);
+  if (sharedState) applySharedState(sharedState);
+  updateActiveNav();
+
+})();
+
+</script>
+</body>
+</html>
+
