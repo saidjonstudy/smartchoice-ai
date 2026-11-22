@@ -2,7 +2,7 @@
 
 **A free, no-sign-up calculator that shows what a product really costs over its life, not just what the price tag says.**
 
-**Live demo:** <https://saidjonstudy.github.io/smartchoice-analytics/?lang=en> · Interface languages: English, Russian, Uzbek (`?lang=en`, `?lang=ru`, `?lang=uz`)
+**Live demo:** <https://saidjonstudy.github.io/smartchoice-ai/?lang=en> · Interface languages: English, Russian, Uzbek (`?lang=en`, `?lang=ru`, `?lang=uz`)
 
 ![Quick-start examples and the input form](01-presets-and-form.png)
 
@@ -245,7 +245,7 @@ The ready-made cases use rounded, illustrative numbers that stay in the range of
 ## Project structure and running locally
 
 ```
-index.html            the whole site: markup, styles, translations (ru / uz / en) and logic
+index.html            the whole site in one file: markup, styles, translations (ru / uz / en) and logic
 sitemap.xml           sitemap for search engines
 tests.html            browser-based checks of the calculation functions
 README.md             this file
